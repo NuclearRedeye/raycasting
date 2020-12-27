@@ -107,6 +107,9 @@ function onTick(timestamp: number) {
     // We should now have the coordinates of the wall, hence now to work out the distance.
     let distance = Math.sqrt(Math.pow(player.x - rayX, 2) + Math.pow(player.y - rayY, 2));
 
+    // Fish eye fix
+    distance = distance * Math.cos(degreeToRadians(rayAngle - player.angle));
+
     // Now work out how high the wall should be...
     let wallHeight = Math.floor(halfHeight / distance);
 

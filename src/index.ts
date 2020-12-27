@@ -4,7 +4,7 @@ let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
 let terminate: boolean = false;
 let start: number;
-let player: Player;
+let player: Entity;
 
 const world = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -32,6 +32,7 @@ class Entity {
 
   rotate(amount: number) {
     this.angle += amount;
+    this.angle %= 360;
   }
 
   move(amount: number) {
@@ -64,7 +65,6 @@ function degreeToRadians(value: number) : number {
   return value * Math.PI / 180;
 }
 
-
 // Util function to draw a line.
 function drawLine(x1: number, y1: number, x2: number, y2: number, colour: string) {
   context.strokeStyle = colour;
@@ -74,15 +74,19 @@ function drawLine(x1: number, y1: number, x2: number, y2: number, colour: string
   context.stroke();
 }
 
-function onTick(timestamp: number) {
-  if (start === undefined) {
-    start = timestamp;
-  }
-  const elapsed = timestamp - start;
+let rotateLeft = false;
+let rotateRight = false;
+let moveForwards = false;
+let moveBackwards = false;
 
-  // Clear the Canvas, although no real need.
-  context.clearRect(0, 0, canvas.width, canvas.height);
+function update(): void {
+  if (moveForwards) player.move(0.1);
+  if (moveBackwards) player.move(-0.1);
+  if (rotateLeft) player.rotate(-2.5);
+  if (rotateRight) player.rotate(2.5);
+}
 
+function render(): void {
   let rayAngle = player.angle - halfFieldOfView;
   for (let i = 0; i < columns; i++) {
     
@@ -121,6 +125,19 @@ function onTick(timestamp: number) {
     // Increment the angle ready to cast the next ray.
     rayAngle += increment;
   }
+}
+
+function onTick(timestamp: number) {
+  if (start === undefined) {
+    start = timestamp;
+  }
+  const elapsed = timestamp - start;
+
+  // Clear the Canvas, although no real need.
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  update();
+  render();
 
   if (!terminate)
   {
@@ -135,19 +152,46 @@ window.onkeydown = (event: KeyboardEvent) => {
       break;
 
     case "KeyW":
-      player.move(1);
+      moveForwards = true;
       break;
 
     case "KeyA":
-      player.rotate(-5);
+      rotateLeft = true;
       break;
 
     case "KeyS":
-      player.move(-1);
+      moveBackwards = true;
       break;
 
     case "KeyD":
-      player.rotate(5);
+      rotateRight = true;
+      break;
+
+    default:
+      break;
+  }
+}
+
+window.onkeyup  = (event: KeyboardEvent) => {
+  switch(event.code) {
+    case "KeyP":
+      terminate = true;
+      break;
+
+    case "KeyW":
+      moveForwards = false;
+      break;
+
+    case "KeyA":
+      rotateLeft = false;
+      break;
+
+    case "KeyS":
+      moveBackwards = false;
+      break;
+
+    case "KeyD":
+      rotateRight = false;
       break;
 
     default:

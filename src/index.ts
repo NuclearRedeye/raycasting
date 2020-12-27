@@ -32,14 +32,6 @@ class Player {
 
   rotate(amount: number) {
     this.angle += amount;
-    if (this.angle < 0)
-    {
-      this.angle = 359
-    }
-    else if (this.angle >= 360)
-    {
-      this.angle = 0;
-    }
   }
 }
 
@@ -131,11 +123,11 @@ window.onkeydown = (event: KeyboardEvent) => {
       break;
 
     case "KeyA":
-      player.rotate(-1);
+      player.rotate(-5);
       break;
 
     case "KeyD":
-      player.rotate(1);
+      player.rotate(5);
       break;
 
     default:

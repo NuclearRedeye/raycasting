@@ -19,10 +19,10 @@ const world = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ];
 
-class Player {
-  x: number;      // The X position of the Player
-  y: number;      // The Y position of the Player
-  angle: number;  // The direction, in degrees, that the Player is looking.
+class Entity {
+  x: number;      // The X position of the Entity
+  y: number;      // The Y position of the Entity
+  angle: number;  // The direction, in degrees, that the Entity is looking.
 
   constructor(x: number, y: number, angle: number) {
     this.x = x;
@@ -32,6 +32,19 @@ class Player {
 
   rotate(amount: number) {
     this.angle += amount;
+  }
+
+  move(amount: number) {
+    let playerCos = Math.cos(degreeToRadians(this.angle)) * amount;
+    let playerSin = Math.sin(degreeToRadians(this.angle)) * amount;
+    let newX = this.x + playerCos;
+    let newY = this.y + playerSin;
+
+    // Collision test
+    if(world[Math.floor(newY)][Math.floor(newX)] == 0) {
+        this.x = newX;
+        this.y = newY;
+    }
   }
 }
 
@@ -51,6 +64,7 @@ function degreeToRadians(value: number) : number {
   return value * Math.PI / 180;
 }
 
+
 // Util function to draw a line.
 function drawLine(x1: number, y1: number, x2: number, y2: number, colour: string) {
   context.strokeStyle = colour;
@@ -58,11 +72,6 @@ function drawLine(x1: number, y1: number, x2: number, y2: number, colour: string
   context.moveTo(x1, y1);
   context.lineTo(x2, y2);
   context.stroke();
-}
-
-function castRay(x: number, y: number, angle: number) : number {
-  let retVal: number = 0;
-  return retVal;
 }
 
 function onTick(timestamp: number) {
@@ -122,8 +131,16 @@ window.onkeydown = (event: KeyboardEvent) => {
       terminate = true;
       break;
 
+    case "KeyW":
+      player.move(1);
+      break;
+
     case "KeyA":
       player.rotate(-5);
+      break;
+
+    case "KeyS":
+      player.move(-1);
       break;
 
     case "KeyD":
@@ -136,7 +153,7 @@ window.onkeydown = (event: KeyboardEvent) => {
 }
 
 window.onload = function(): void {
-  player = new Player(5, 5, 0);
+  player = new Entity(5, 5, 0);
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
   context = canvas.getContext("2d") as CanvasRenderingContext2D;
   window.requestAnimationFrame(onTick);

@@ -120,6 +120,7 @@ function render(): void {
     // And finally, draw...
     drawLine(i, 0, i, halfHeight - wallHeight, "cyan");
     drawLine(i, halfHeight - wallHeight, i, halfHeight + wallHeight, "red");
+    drawLine(i, halfHeight - wallHeight, i, halfHeight + wallHeight, `rgba(0,0,0,${0.1 * distance})`);
     drawLine(i, halfHeight + wallHeight, i, height, "green");
 
     // Increment the angle ready to cast the next ray.

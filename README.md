@@ -1,6 +1,6 @@
-# TypeScript Web Application
+# Ray Casting
 
-A TypeScript web application template that can be used as a seed for new projects.
+Experiment in rendering using ray casting implemented in TypeScript and HTML.
 
 # Getting Started
 
@@ -20,8 +20,8 @@ You can also package the entire application in a docker container, ready to depl
 
 ```
 npm run build
-docker build . -t typescript-web-application:dev
-docker run -p 8080:80 typescript-web-application:dev
+docker build . -t raycasting:dev
+docker run -p 8080:80 raycasting:dev
 ```
 
 Then open http://localhost:8080 in your browser.

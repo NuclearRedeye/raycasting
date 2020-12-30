@@ -1,7 +1,7 @@
 {
   "name": "raycasting",
   "version": "0.0.0",
-  "description": "Experiment in rendering using raycasting",
+  "description": "Experiment in rendering using ray casting",
   "main": "index.js",
   "type": "module",
   "scripts": {

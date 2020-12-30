@@ -5,6 +5,28 @@ let context: CanvasRenderingContext2D;
 let terminate: boolean = false;
 let start: number;
 let player: Entity;
+let image: HTMLImageElement;
+
+const textures = [
+  {
+      width: 8,
+      height: 8,
+      bitmap: [
+          [1,1,1,1,1,1,1,1],
+          [0,0,0,1,0,0,0,1],
+          [1,1,1,1,1,1,1,1],
+          [0,1,0,0,0,1,0,0],
+          [1,1,1,1,1,1,1,1],
+          [0,0,0,1,0,0,0,1],
+          [1,1,1,1,1,1,1,1],
+          [0,1,0,0,0,1,0,0]
+      ],
+      colors: [
+          "rgb(255, 241, 232)",
+          "rgb(194, 195, 199)",
+      ]
+  }
+];
 
 const world = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -74,16 +96,44 @@ function drawLine(x1: number, y1: number, x2: number, y2: number, colour: string
   context.stroke();
 }
 
+// This function draws a strip of the specified texture 
+function drawTexture(x: number, wallHeight: number, texturePositionX: number, texture: any) {
+  let yIncrementer = (wallHeight * 2) / texture.height;
+
+  // The vertical point to start drawing from.
+  let y = halfHeight - wallHeight;
+
+  for(let i = 0; i < texture.height; i++) {
+      context.strokeStyle = texture.colors[texture.bitmap[i][texturePositionX]];
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(x, y + (yIncrementer + 0.5));
+      context.stroke();
+      y += yIncrementer;
+  }
+}
+
+// This function draws a strip of the specified texture 
+function drawTextureAlt(x: number, wallHeight: number, texturePositionX: number, texture: HTMLImageElement) {
+  //let yIncrementer = (wallHeight * 2) / texture.height;
+
+  // The vertical point to start drawing from.
+  let y = halfHeight - wallHeight;
+
+  // Draw the texture.
+  context.drawImage(texture, texturePositionX, 0, 1, 16, x, y, 1, wallHeight * 2);
+}
+
 let rotateLeft = false;
 let rotateRight = false;
 let moveForwards = false;
 let moveBackwards = false;
 
-function update(): void {
-  if (moveForwards) player.move(0.1);
-  if (moveBackwards) player.move(-0.1);
-  if (rotateLeft) player.rotate(-2.5);
-  if (rotateRight) player.rotate(2.5);
+function update(elapsed: number): void {
+  if (moveForwards) player.move(3.0 / elapsed);
+  if (moveBackwards) player.move(-1.0 / elapsed);
+  if (rotateLeft) player.rotate(-70 / elapsed);
+  if (rotateRight) player.rotate(70 / elapsed);
 }
 
 function render(): void {
@@ -117,28 +167,47 @@ function render(): void {
     // Now work out how high the wall should be...
     let wallHeight = Math.floor(halfHeight / distance);
 
+    // Get texture
+    let texture = textures[wall - 1];
+
+    // Calcule texture position
+    let texturePositionX = Math.floor((16 * (rayX + rayY)) % 16);
+
     // And finally, draw...
-    drawLine(i, 0, i, halfHeight - wallHeight, "cyan");
-    drawLine(i, halfHeight - wallHeight, i, halfHeight + wallHeight, "red");
-    drawLine(i, halfHeight - wallHeight, i, halfHeight + wallHeight, `rgba(0,0,0,${0.1 * distance})`);
-    drawLine(i, halfHeight + wallHeight, i, height, "green");
+    drawLine(i, 0, i, halfHeight - wallHeight, "black");
+    //drawLine(i, halfHeight - wallHeight, i, halfHeight + wallHeight, "red");
+    drawTextureAlt(i, wallHeight, texturePositionX, image);
+    drawLine(i, halfHeight - wallHeight, i, halfHeight + wallHeight, `rgba(0,0,0,${0.15 * distance})`);
+    drawLine(i, halfHeight + wallHeight, i, height, "gray");
 
     // Increment the angle ready to cast the next ray.
     rayAngle += increment;
   }
 }
 
+
 function onTick(timestamp: number) {
+  let startTime = performance.now();
+
   if (start === undefined) {
     start = timestamp;
   }
   const elapsed = timestamp - start;
+  start = timestamp;
 
   // Clear the Canvas, although no real need.
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  update();
+  update(elapsed);
   render();
+
+
+  let endTime = performance.now();
+
+  context.fillStyle = "white";
+  context.fillText(`Current FPS: ${(1000 / elapsed).toFixed(2)}`, 10, 10);
+  context.fillText(`Current FT:  ${elapsed.toFixed(2)}`, 10, 30);
+  context.fillText(`Processing Time:  ${(endTime - startTime).toFixed(2)}`, 10, 50);
 
   if (!terminate)
   {
@@ -202,6 +271,7 @@ window.onkeyup  = (event: KeyboardEvent) => {
 
 window.onload = function(): void {
   player = new Entity(5, 5, 0);
+  image = document.getElementById("tex") as HTMLImageElement;
   canvas = document.getElementById("canvas") as HTMLCanvasElement;
   context = canvas.getContext("2d") as CanvasRenderingContext2D;
   window.requestAnimationFrame(onTick);

@@ -1,34 +1,13 @@
-import { createTextElement } from './utils/utils.js';
+import { degreesToRadians } from './utils/utils.js';
 
 let canvas: HTMLCanvasElement;
 let context: CanvasRenderingContext2D;
 let terminate: boolean = false;
 let start: number;
 let player: Entity;
-let image: HTMLImageElement;
+let textures: Texture[] = new Array();
 
-const textures = [
-  {
-      width: 8,
-      height: 8,
-      bitmap: [
-          [1,1,1,1,1,1,1,1],
-          [0,0,0,1,0,0,0,1],
-          [1,1,1,1,1,1,1,1],
-          [0,1,0,0,0,1,0,0],
-          [1,1,1,1,1,1,1,1],
-          [0,0,0,1,0,0,0,1],
-          [1,1,1,1,1,1,1,1],
-          [0,1,0,0,0,1,0,0]
-      ],
-      colors: [
-          "rgb(255, 241, 232)",
-          "rgb(194, 195, 199)",
-      ]
-  }
-];
-
-const world = [
+const world: number[][] = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
   [1, 0, 1, 0, 0, 1, 0, 0, 0, 1],
@@ -36,7 +15,7 @@ const world = [
   [1, 0, 1, 1, 1, 0, 0, 0, 0, 1],
   [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 1, 1, 1, 1, 1, 0, 0, 1],
+  [1, 0, 2, 2, 2, 2, 2, 0, 0, 1],
   [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ];
@@ -58,8 +37,8 @@ class Entity {
   }
 
   move(amount: number) {
-    let playerCos = Math.cos(degreeToRadians(this.angle)) * amount;
-    let playerSin = Math.sin(degreeToRadians(this.angle)) * amount;
+    let playerCos = Math.cos(degreesToRadians(this.angle)) * amount;
+    let playerSin = Math.sin(degreesToRadians(this.angle)) * amount;
     let newX = this.x + playerCos;
     let newY = this.y + playerSin;
 
@@ -82,9 +61,43 @@ const halfFieldOfView = fieldOfView / 2;  // Half the field of view.
 const precision = 64;                     // The dimensions of each square in the grid.
 const increment = fieldOfView / columns;  // The step to add for each ray cast.
 
-// Converts a value from degress to radians.
-function degreeToRadians(value: number) : number {
-  return value * Math.PI / 180;
+// Encapsulates a Texture
+interface Texture {
+  id: number;                 // Textures ID, e.g. 10.
+  src: string;                // Source image for the texture, e.g. 'image.png'.
+  width: number;              // The width, in pixels, of the Texture.
+  height: number;             // The height, in pixels, of the Texture.
+  image: HTMLImageElement;    // Handle to the DOM image element for this Texture.
+  canvas: HTMLCanvasElement;  // Handle to the Offscreen Canvas for this Texture data.
+}
+
+interface Cell {
+  wall: boolean;
+  textureId: number;
+}
+
+async function createTexture(id: number, src: string, width: number, height: number) : Promise<Texture> {
+  let texture: Texture = {
+    id,
+    src,
+    width,
+    height,
+    image: document.createElement('img') as HTMLImageElement,
+    canvas: document.createElement('canvas') as HTMLCanvasElement
+  };
+
+  texture.image.width = width;
+  texture.image.height = height;
+  texture.image.src = src;
+
+  texture.canvas.width = width;
+  texture.canvas.height = height;
+
+  await texture.image.decode();
+
+  const context = texture.canvas.getContext('2d') as CanvasRenderingContext2D;
+  context.drawImage(texture.image, 0, 0);
+  return texture;
 }
 
 // Util function to draw a line.
@@ -113,15 +126,9 @@ function drawTexture(x: number, wallHeight: number, texturePositionX: number, te
   }
 }
 
-// This function draws a strip of the specified texture 
-function drawTextureAlt(x: number, wallHeight: number, texturePositionX: number, texture: HTMLImageElement) {
-  //let yIncrementer = (wallHeight * 2) / texture.height;
-
-  // The vertical point to start drawing from.
-  let y = halfHeight - wallHeight;
-
-  // Draw the texture.
-  context.drawImage(texture, texturePositionX, 0, 1, 16, x, y, 1, wallHeight * 2);
+// Alternative function that renders a texture using the drawImage function.
+function drawTextureAlt(x: number, wallHeight: number, texturePositionX: number, texture: Texture) {
+  context.drawImage(texture.canvas, texturePositionX, 0, 1, 16, x, (halfHeight - wallHeight), 1, wallHeight * 2);
 }
 
 let rotateLeft = false;
@@ -145,8 +152,8 @@ function render(): void {
     let rayY = player.y;
 
     // These are the X and Y amounts that we need to add to check for hits against walls.
-    let rayCos = Math.cos(degreeToRadians(rayAngle)) / precision;
-    let raySin = Math.sin(degreeToRadians(rayAngle)) / precision;
+    let rayCos = Math.cos(degreesToRadians(rayAngle)) / precision;
+    let raySin = Math.sin(degreesToRadians(rayAngle)) / precision;
 
     // We start from the assumption that we're not already in a wall!
     let wall = 0;
@@ -162,7 +169,7 @@ function render(): void {
     let distance = Math.sqrt(Math.pow(player.x - rayX, 2) + Math.pow(player.y - rayY, 2));
 
     // Fish eye fix
-    distance = distance * Math.cos(degreeToRadians(rayAngle - player.angle));
+    distance = distance * Math.cos(degreesToRadians(rayAngle - player.angle));
 
     // Now work out how high the wall should be...
     let wallHeight = Math.floor(halfHeight / distance);
@@ -171,12 +178,12 @@ function render(): void {
     let texture = textures[wall - 1];
 
     // Calcule texture position
-    let texturePositionX = Math.floor((16 * (rayX + rayY)) % 16);
+    let texturePositionX = Math.floor((texture.width * (rayX + rayY)) % texture.width);
 
     // And finally, draw...
     drawLine(i, 0, i, halfHeight - wallHeight, "black");
     //drawLine(i, halfHeight - wallHeight, i, halfHeight + wallHeight, "red");
-    drawTextureAlt(i, wallHeight, texturePositionX, image);
+    drawTextureAlt(i, wallHeight, texturePositionX, textures[wall]);
     drawLine(i, halfHeight - wallHeight, i, halfHeight + wallHeight, `rgba(0,0,0,${0.15 * distance})`);
     drawLine(i, halfHeight + wallHeight, i, height, "gray");
 
@@ -185,7 +192,7 @@ function render(): void {
   }
 }
 
-
+// Main Loop
 function onTick(timestamp: number) {
   let startTime = performance.now();
 
@@ -200,7 +207,6 @@ function onTick(timestamp: number) {
 
   update(elapsed);
   render();
-
 
   let endTime = performance.now();
 
@@ -269,10 +275,20 @@ window.onkeyup  = (event: KeyboardEvent) => {
   }
 }
 
+async function load() {
+  return Promise.all([
+    textures.push(await createTexture(0, 'assets/wall.brick.00.png', 16, 16)),
+    textures.push(await createTexture(1, 'assets/wall.brick.01.png', 16, 16)),
+    textures.push(await createTexture(2, 'assets/wall.brick.02.png', 16, 16))
+  ]);
+}
+
 window.onload = function(): void {
-  player = new Entity(5, 5, 0);
-  image = document.getElementById("tex") as HTMLImageElement;
-  canvas = document.getElementById("canvas") as HTMLCanvasElement;
-  context = canvas.getContext("2d") as CanvasRenderingContext2D;
-  window.requestAnimationFrame(onTick);
+  load().then(() => {
+    player = new Entity(5, 5, 0);
+    canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    context = canvas.getContext("2d") as CanvasRenderingContext2D;
+    context.imageSmoothingEnabled = false;
+    window.requestAnimationFrame(onTick);
+  });
 };

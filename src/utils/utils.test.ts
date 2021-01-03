@@ -1,9 +1,7 @@
-import { createTextElement } from './utils';
+import { degreesToRadians } from './utils';
 
-describe('createTextElement', function() {
-  it('creates an element', function() {
-    const message = 'test content';
-    const result = createTextElement(message);
-    expect(result.innerHTML).toBe(message);
+describe('degreesToRadians', function() {
+  it('converts degress to radians', function() {
+    expect(degreesToRadians(57)).toEqual(0.9948376736367678);
   });
 });

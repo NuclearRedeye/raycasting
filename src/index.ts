@@ -6,6 +6,7 @@ let terminate: boolean = false;
 let start: number;
 let player: Entity;
 let textures: Texture[] = new Array();
+let debug = false;
 
 const world: number[][] = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -61,74 +62,84 @@ const halfFieldOfView = fieldOfView / 2;  // Half the field of view.
 const precision = 64;                     // The dimensions of each square in the grid.
 const increment = fieldOfView / columns;  // The step to add for each ray cast.
 
+// Encapsulates a Point
+interface Point {
+  x: number;                  // The x coordinate of the point.
+  y: number;                  // The y coordinate of the point.
+};
+
 // Encapsulates a Texture
 interface Texture {
-  id: number;                 // Textures ID, e.g. 10.
   src: string;                // Source image for the texture, e.g. 'image.png'.
   width: number;              // The width, in pixels, of the Texture.
   height: number;             // The height, in pixels, of the Texture.
   image: HTMLImageElement;    // Handle to the DOM image element for this Texture.
   canvas: HTMLCanvasElement;  // Handle to the Offscreen Canvas for this Texture data.
+  pixels: string[];
 }
 
+// Encapsulates a Cell
 interface Cell {
   wall: boolean;
   textureId: number;
 }
 
-async function createTexture(id: number, src: string, width: number, height: number) : Promise<Texture> {
+// Loads the specified image, decodes and copys it to an offscreen canvas and encapsulates it in a Texture object.
+async function createTexture(src: string, width: number, height: number) : Promise<Texture> {
   let texture: Texture = {
-    id,
     src,
     width,
     height,
     image: document.createElement('img') as HTMLImageElement,
-    canvas: document.createElement('canvas') as HTMLCanvasElement
+    canvas: document.createElement('canvas') as HTMLCanvasElement,
+    pixels: []
   };
 
-  texture.image.width = width;
-  texture.image.height = height;
-  texture.image.src = src;
-
+  // Initialise the offscreen canvas
   texture.canvas.width = width;
   texture.canvas.height = height;
 
+  // Load and wait for the image to be decoded
+  texture.image.src = src;
   await texture.image.decode();
 
-  const context = texture.canvas.getContext('2d') as CanvasRenderingContext2D;
-  context.drawImage(texture.image, 0, 0);
+  // Blit the image to the offscreen buffer
+  const context = texture.canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
+  context.fillStyle = 'white';
+  context.fillRect(0,0,width,height);
+  context.drawImage(texture.image, 0, 0, width, height, 0, 0, width, height);
+
+  const imageData = context.getImageData(0, 0, texture.width, texture.height).data;
+  texture.pixels = createColourBuffer(imageData);
   return texture;
 }
 
-// Util function to draw a line.
-function drawLine(x1: number, y1: number, x2: number, y2: number, colour: string) {
+function createColourBuffer(imageData: Uint8ClampedArray) {
+  let colorArray = [];
+  for (let i = 0; i < imageData.length; i += 4) {
+      colorArray.push(`rgb(${imageData[i]},${imageData[i + 1]},${imageData[i + 2]})`);
+  }
+  return colorArray;
+}
+
+// Draw a line of the specified colour on the target canvas.
+function drawLine(context: CanvasRenderingContext2D, start: Point, end: Point, colour: string) {
   context.strokeStyle = colour;
   context.beginPath();
-  context.moveTo(x1, y1);
-  context.lineTo(x2, y2);
+  context.moveTo(start.x, start.y);
+  context.lineTo(end.x, end.y);
   context.stroke();
 }
 
-// This function draws a strip of the specified texture 
-function drawTexture(x: number, wallHeight: number, texturePositionX: number, texture: any) {
-  let yIncrementer = (wallHeight * 2) / texture.height;
-
-  // The vertical point to start drawing from.
-  let y = halfHeight - wallHeight;
-
-  for(let i = 0; i < texture.height; i++) {
-      context.strokeStyle = texture.colors[texture.bitmap[i][texturePositionX]];
-      context.beginPath();
-      context.moveTo(x, y);
-      context.lineTo(x, y + (yIncrementer + 0.5));
-      context.stroke();
-      y += yIncrementer;
-  }
+// Function that renders a texture using the drawImage function.
+function drawTexture(context: CanvasRenderingContext2D, start: Point, end: Point, texturePositionX: number, texture: Texture) {
+  context.drawImage(texture.canvas, texturePositionX, 0, 1, texture.height, start.x, start.y, 1, end.y - start.y);
 }
 
-// Alternative function that renders a texture using the drawImage function.
-function drawTextureAlt(x: number, wallHeight: number, texturePositionX: number, texture: Texture) {
-  context.drawImage(texture.canvas, texturePositionX, 0, 1, 16, x, (halfHeight - wallHeight), 1, wallHeight * 2);
+// Renders the specified texture as a parallax skybox.
+function drawSkybox(context: CanvasRenderingContext2D, start: Point, end: Point, texturePositionX: number, texture: Texture) {
+  const wallHeight = end.y - start.y;
+  context.drawImage(texture.canvas, texturePositionX, 0, 1, (wallHeight / height) * texture.height, start.x, start.y, 1, wallHeight);
 }
 
 let rotateLeft = false;
@@ -144,12 +155,14 @@ function update(elapsed: number): void {
 }
 
 function render(): void {
+  // First we calculate the angle of the first, leftmost of the player, ray to cast.
   let rayAngle = player.angle - halfFieldOfView;
-  for (let i = 0; i < columns; i++) {
+
+  // We then iterate over and render each vertical scan line of the view port, incrementing the angle by ( FOV / width )
+  for (let column = 0; column < columns; column++) {
     
     // The ray starts from the players current grid position.
-    let rayX = player.x;
-    let rayY = player.y;
+    let ray: Point = {x: player.x, y: player.y};
 
     // These are the X and Y amounts that we need to add to check for hits against walls.
     let rayCos = Math.cos(degreesToRadians(rayAngle)) / precision;
@@ -160,13 +173,14 @@ function render(): void {
 
     // Then, whilst we haven't hit a wall 
     while(wall == 0) {
-        rayX += rayCos;
-        rayY += raySin;
-        wall = world[Math.floor(rayY)][Math.floor(rayX)];
+        ray.x += rayCos;
+        ray.y += raySin;
+        wall = world[Math.floor(ray.y)][Math.floor(ray.x)];
     }
 
-    // We should now have the coordinates of the wall, hence now to work out the distance.
-    let distance = Math.sqrt(Math.pow(player.x - rayX, 2) + Math.pow(player.y - rayY, 2));
+    // We should now have the coordinates of the wall, hence we can work out the distance the wall is from the player by
+    // using Pythagoras's theorem.
+    let distance = Math.sqrt(Math.pow(player.x - ray.x, 2) + Math.pow(player.y - ray.y, 2));
 
     // Fish eye fix
     distance = distance * Math.cos(degreesToRadians(rayAngle - player.angle));
@@ -177,15 +191,26 @@ function render(): void {
     // Get texture
     let texture = textures[wall - 1];
 
-    // Calcule texture position
-    let texturePositionX = Math.floor((texture.width * (rayX + rayY)) % texture.width);
+    // Calculate texture position (This is drawing the image mirrored...)
+    let texturePositionX = Math.floor((texture.width * (ray.x + ray.y)) % texture.width);
 
-    // And finally, draw...
-    drawLine(i, 0, i, halfHeight - wallHeight, "black");
-    //drawLine(i, halfHeight - wallHeight, i, halfHeight + wallHeight, "red");
-    drawTextureAlt(i, wallHeight, texturePositionX, textures[wall]);
-    drawLine(i, halfHeight - wallHeight, i, halfHeight + wallHeight, `rgba(0,0,0,${0.15 * distance})`);
-    drawLine(i, halfHeight + wallHeight, i, height, "gray");
+    // And now we can draw the scanline...
+    const start: Point = {x: column, y: 0};
+    const wallStart: Point = {x: column, y: halfHeight - wallHeight};
+    const wallEnd: Point = {x: column, y: halfHeight + wallHeight};
+    const end: Point = {x:column, y: height};
+
+    // 1. Draw the Skybox..
+    drawSkybox(context, start, wallStart, Math.abs(rayAngle % 360), textures[textures.length - 1]);
+
+    // 2. Draw the Textured Wall...
+    drawTexture(context, wallStart, wallEnd, texturePositionX, textures[wall]);
+
+    // 3. Apply some shading based on distance from player... 
+    drawLine(context, wallStart, wallEnd, `rgba(0,0,0,${0.08 * distance})`);
+
+    // 4. Draw the floor
+    drawLine(context, wallEnd, end, 'gray');
 
     // Increment the angle ready to cast the next ray.
     rayAngle += increment;
@@ -210,10 +235,12 @@ function onTick(timestamp: number) {
 
   let endTime = performance.now();
 
-  context.fillStyle = "white";
-  context.fillText(`Current FPS: ${(1000 / elapsed).toFixed(2)}`, 10, 10);
-  context.fillText(`Current FT:  ${elapsed.toFixed(2)}`, 10, 30);
-  context.fillText(`Processing Time:  ${(endTime - startTime).toFixed(2)}`, 10, 50);
+  if (debug) {
+    context.fillStyle = "white";
+    context.fillText(`Current FPS: ${(1000 / elapsed).toFixed(2)}`, 10, 10);
+    context.fillText(`Current FT:  ${elapsed.toFixed(2)}`, 10, 30);
+    context.fillText(`Processing Time:  ${(endTime - startTime).toFixed(2)}`, 10, 50);
+  }
 
   if (!terminate)
   {
@@ -277,18 +304,20 @@ window.onkeyup  = (event: KeyboardEvent) => {
 
 async function load() {
   return Promise.all([
-    textures.push(await createTexture(0, 'assets/wall.brick.00.png', 16, 16)),
-    textures.push(await createTexture(1, 'assets/wall.brick.01.png', 16, 16)),
-    textures.push(await createTexture(2, 'assets/wall.brick.02.png', 16, 16))
+    textures.push(await createTexture('assets/wall.brick.00.png', 16, 16)),
+    textures.push(await createTexture('assets/wall.brick.01.png', 16, 16)),
+    textures.push(await createTexture('assets/wall.brick.02.png', 16, 16)),
+    textures.push(await createTexture('assets/background.01.png', 360, 60))
   ]);
 }
 
 window.onload = function(): void {
   load().then(() => {
-    player = new Entity(5, 5, 0);
+    player = new Entity(8.5, 3.5, 135);
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    context = canvas.getContext("2d") as CanvasRenderingContext2D;
+    context = canvas.getContext("2d",{ alpha: false }) as CanvasRenderingContext2D;
     context.imageSmoothingEnabled = false;
+    context.globalAlpha = 1.0;
     window.requestAnimationFrame(onTick);
   });
 };

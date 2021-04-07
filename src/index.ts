@@ -6,7 +6,7 @@ let terminate: boolean = false;
 let start: number;
 let player: Entity;
 let textures: Texture[] = new Array();
-let debug = false;
+let debug = true;
 
 const world: number[][] = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -75,7 +75,6 @@ interface Texture {
   height: number;             // The height, in pixels, of the Texture.
   image: HTMLImageElement;    // Handle to the DOM image element for this Texture.
   canvas: HTMLCanvasElement;  // Handle to the Offscreen Canvas for this Texture data.
-  pixels: string[];
 }
 
 // Encapsulates a Cell
@@ -92,7 +91,6 @@ async function createTexture(src: string, width: number, height: number) : Promi
     height,
     image: document.createElement('img') as HTMLImageElement,
     canvas: document.createElement('canvas') as HTMLCanvasElement,
-    pixels: []
   };
 
   // Initialise the offscreen canvas
@@ -110,16 +108,7 @@ async function createTexture(src: string, width: number, height: number) : Promi
   context.drawImage(texture.image, 0, 0, width, height, 0, 0, width, height);
 
   const imageData = context.getImageData(0, 0, texture.width, texture.height).data;
-  texture.pixels = createColourBuffer(imageData);
   return texture;
-}
-
-function createColourBuffer(imageData: Uint8ClampedArray) {
-  let colorArray = [];
-  for (let i = 0; i < imageData.length; i += 4) {
-      colorArray.push(`rgb(${imageData[i]},${imageData[i + 1]},${imageData[i + 2]})`);
-  }
-  return colorArray;
 }
 
 // Draw a line of the specified colour on the target canvas.
@@ -216,6 +205,7 @@ function render(): void {
     rayAngle += increment;
   }
 }
+
 
 // Main Loop
 function onTick(timestamp: number) {

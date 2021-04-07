@@ -12,7 +12,7 @@
     "distclean": "rimraf out node_modules",
     "watch:src": "tsc --watch",
     "watch:assets": "nodemon -w './src' -e 'html,css,png,jpg' -x 'rollup --config'",
-    "debug": "live-server --port=5000 --no-browser ./out/debug/",
+    "debug": "live-server --port=8080 --no-browser ./dist/debug/",
     "start": "npm-run-all build --parallel debug watch:* debug",
     "lint": "eslint ./src --ext .js,.ts",
     "test": "jest",

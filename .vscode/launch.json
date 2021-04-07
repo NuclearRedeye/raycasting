@@ -29,8 +29,8 @@
       "name": "Client",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost:5000",
-      "webRoot": "${workspaceRoot}/out/debug"
+      "url": "http://localhost:8080",
+      "webRoot": "${workspaceRoot}/dist/debug"
     }
   ],
   "compounds": [

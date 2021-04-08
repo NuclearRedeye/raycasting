@@ -19,20 +19,20 @@ SOURCES  := $(shell find ./src/ts/ -type f -name *.ts)
 # When no target is specified, the default target to run.
 .DEFAULT_GOAL := debug
 
-# Cleans build output and local dependencies
+# Target that cleans build output and local dependencies.
 distclean: clean
 	@rm -rf node_modules
 
-# Cleans build output
+# Target that cleans build output
 clean:
 	@rm -rf dist
 
-# Install Node.js dependencies if the node_modules directory is missing or the package.json file has changed.
+# Target to install Node.js dependencies.
 node_modules: package.json
 	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npm install
 	@touch node_modules
 
-# Recipe to create output directories.
+# Target to create the output directories.
 dist/debug dist/release:
 	@mkdir -p $(CURDIR)/$@
 

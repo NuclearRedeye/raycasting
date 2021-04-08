@@ -18,14 +18,11 @@ make debug
 
 Then open http://localhost:8080 in your browser.
 
-You can also package the entire application in a docker container, ready to deploy.
+You can also package the entire application in a docker container, ready to distribute.
 
 ```
-make release
-docker run -p 8080:80 raycasting:dev
+docker build -t raycasting:local .
 ```
-
-Then open http://localhost:8080 in your browser.
 
 ## License
 

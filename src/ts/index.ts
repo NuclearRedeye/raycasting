@@ -77,12 +77,6 @@ interface Texture {
   canvas: HTMLCanvasElement;  // Handle to the Offscreen Canvas for this Texture data.
 }
 
-// Encapsulates a Cell
-interface Cell {
-  wall: boolean;
-  textureId: number;
-}
-
 // Loads the specified image, decodes and copys it to an offscreen canvas and encapsulates it in a Texture object.
 async function createTexture(src: string, width: number, height: number) : Promise<Texture> {
   let texture: Texture = {
@@ -303,7 +297,7 @@ async function load() {
 
 window.onload = function(): void {
   load().then(() => {
-    player = new Entity(8.5, 3.5, 135);
+    player = new Entity(8.5, 3.5, 0);
     canvas = document.getElementById("canvas") as HTMLCanvasElement;
     context = canvas.getContext("2d",{ alpha: false }) as CanvasRenderingContext2D;
     context.imageSmoothingEnabled = false;

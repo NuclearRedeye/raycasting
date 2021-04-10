@@ -21,6 +21,7 @@ Then open http://localhost:8080 in your browser.
 You can also package the entire application in a docker container, ready to distribute.
 
 ```
+make release
 docker build -t raycasting:local .
 ```
 

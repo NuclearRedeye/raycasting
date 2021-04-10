@@ -3,7 +3,8 @@ PROJECT := $(notdir $(CURDIR))
 NODE_VERSION ?= fermium
 PORT ?= 8080
 
-DOCKER := docker run -it --rm -w=/$(PROJECT) -v $(CURDIR):/$(PROJECT):rw
+# Build commands
+DOCKER := docker run --rm -w=/$(PROJECT) -v $(CURDIR):/$(PROJECT):rw
 
 # Files that when changed should trigger a rebuild.
 TS     := $(shell find ./src/ -type f -name *.ts)
@@ -33,55 +34,59 @@ clean:
 
 # Target to install Node.js dependencies.
 node_modules: package.json
+	@echo "Installing dependencies..."
 	@$(DOCKER) node:$(NODE_VERSION) npm install
 	@touch node_modules
 
 # Target to create the output directories.
 out/debug out/release:
-	@echo "Creating $@"
+	@echo "Creating $@..."
 	@mkdir -p $(CURDIR)/$@
 
 # Target that creates the specified HTML file by copying it from the src directory.
 %.html:
-	@echo "Creating $@"
+	@echo "Creating $@..."
 	@cp $(CURDIR)/src/html/$(@F) $@
 
 # Target that creates the assets by copying them from the src directory.
 out/debug/assets out/release/assets:
-	@echo "Creating $@"
+	@echo "Creating $@..."
 	@cp -r $(CURDIR)/src/assets/ $@
 
 # Target that compiles TypeScript to JavaScript.
 out/debug/index.js: node_modules out/debug tsconfig.json $(TS)
-	@echo "Creating $@"
+	@echo "Creating $@..."
 	@$(DOCKER) node:$(NODE_VERSION) npx tsc
 
 # Target that compiles SCSS to CSS.
 out/debug/index.css: node_modules out/debug $(SASS)
-	@echo "Creating $@"
+	@echo "Creating $@..."
 	@$(DOCKER) node:$(NODE_VERSION) npx sass ./src/scss/index.scss $@
 
 # Target that bundles, treeshakes and minifies the JavaScript.
 out/release/index.js: out/release out/debug/index.js
-	@echo "Creating $@"
+	@echo "Creating $@..."
 	@$(DOCKER) node:$(NODE_VERSION) npx rollup ./out/debug/index.js --file $@
 	@$(DOCKER) node:$(NODE_VERSION) npx terser -c -m -o $@ $@
 
 # Target that compiles SCSS to CSS.
 out/release/index.css: node_modules out/release $(SASS)
-	@echo "Creating $@"
+	@echo "Creating $@..."
 	@$(DOCKER) node:$(NODE_VERSION) npx sass --no-source-map ./src/scss/index.scss $@
 
 # Target that checks the code for style/formating issues.
 format: node_modules
+	@echo "Running style checks..."
 	@$(DOCKER) node:$(NODE_VERSION) npx prettier --check src/**/*.ts
 
 # Target that lints the code for errors.
 lint: node_modules
+	@echo "Running linter..."
 	@$(DOCKER) node:$(NODE_VERSION) npx eslint ./src --ext .js,.ts
 
 # Target to run all unit tests.
 test: node_modules
+	@echo "Running unit tests..."
 	@$(DOCKER) node:$(NODE_VERSION) npx jest
 
 # Target that builds a debug/development version of the app

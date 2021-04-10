@@ -3,7 +3,9 @@ PROJECT := $(notdir $(CURDIR))
 NODE_VERSION ?= fermium
 PORT ?= 8080
 
-# Source files that when changed should trigger a rebuild.
+DOCKER := docker run -it --rm -w=/$(PROJECT) -v $(CURDIR):/$(PROJECT):rw
+
+# Files that when changed should trigger a rebuild.
 TS     := $(shell find ./src/ -type f -name *.ts)
 SASS   := $(shell find ./src/ -type f -name *.scss)
 HTML   := $(shell find ./src/ -type f -name *.html)
@@ -31,7 +33,7 @@ clean:
 
 # Target to install Node.js dependencies.
 node_modules: package.json
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npm install
+	@$(DOCKER) node:$(NODE_VERSION) npm install
 	@touch node_modules
 
 # Target to create the output directories.
@@ -52,34 +54,35 @@ out/debug/assets out/release/assets:
 # Target that compiles TypeScript to JavaScript.
 out/debug/index.js: node_modules out/debug tsconfig.json $(TS)
 	@echo "Creating $@"
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx tsc
+	@$(DOCKER) node:$(NODE_VERSION) npx tsc
 
 # Target that compiles SCSS to CSS.
 out/debug/index.css: node_modules out/debug $(SASS)
 	@echo "Creating $@"
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx sass ./src/scss/index.scss $@
+	@$(DOCKER) node:$(NODE_VERSION) npx sass ./src/scss/index.scss $@
 
 # Target that bundles, treeshakes and minifies the JavaScript.
 out/release/index.js: out/release out/debug/index.js
 	@echo "Creating $@"
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx rollup ./out/debug/index.js --file $@ && npx terser -c -m -o $@ $@
+	@$(DOCKER) node:$(NODE_VERSION) npx rollup ./out/debug/index.js --file $@
+	@$(DOCKER) node:$(NODE_VERSION) npx terser -c -m -o $@ $@
 
 # Target that compiles SCSS to CSS.
 out/release/index.css: node_modules out/release $(SASS)
 	@echo "Creating $@"
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx sass --no-source-map ./src/scss/index.scss $@
+	@$(DOCKER) node:$(NODE_VERSION) npx sass --no-source-map ./src/scss/index.scss $@
 
 # Target that checks the code for style/formating issues.
 format: node_modules
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx prettier --check src/**/*.ts
+	@$(DOCKER) node:$(NODE_VERSION) npx prettier --check src/**/*.ts
 
 # Target that lints the code for errors.
 lint: node_modules
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx eslint ./src --ext .js,.ts
+	@$(DOCKER) node:$(NODE_VERSION) npx eslint ./src --ext .js,.ts
 
 # Target to run all unit tests.
 test: node_modules
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx jest
+	@$(DOCKER) node:$(NODE_VERSION) npx jest
 
 # Target that builds a debug/development version of the app
 debug: out/debug out/debug/index.html out/debug/index.css out/debug/index.js out/debug/assets

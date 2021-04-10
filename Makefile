@@ -27,7 +27,7 @@ distclean: clean
 
 # Target that cleans build output
 clean:
-	@rm -rf dist
+	@rm -rf out
 
 # Target to install Node.js dependencies.
 node_modules: package.json
@@ -35,7 +35,7 @@ node_modules: package.json
 	@touch node_modules
 
 # Target to create the output directories.
-dist/debug dist/release:
+out/debug out/release:
 	@echo "Creating $@"
 	@mkdir -p $(CURDIR)/$@
 
@@ -45,27 +45,27 @@ dist/debug dist/release:
 	@cp $(CURDIR)/src/html/$(@F) $@
 
 # Target that creates the assets by copying them from the src directory.
-dist/debug/assets dist/release/assets:
+out/debug/assets out/release/assets:
 	@echo "Creating $@"
 	@cp -r $(CURDIR)/src/assets/ $@
 
 # Target that compiles TypeScript to JavaScript.
-dist/debug/index.js: node_modules dist/debug tsconfig.json $(TS)
+out/debug/index.js: node_modules out/debug tsconfig.json $(TS)
 	@echo "Creating $@"
 	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx tsc
 
 # Target that compiles SCSS to CSS.
-dist/debug/index.css: node_modules dist/debug $(SASS)
+out/debug/index.css: node_modules out/debug $(SASS)
 	@echo "Creating $@"
 	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx sass ./src/scss/index.scss $@
 
 # Target that bundles, treeshakes and minifies the JavaScript.
-dist/release/index.js: dist/release dist/debug/index.js
+out/release/index.js: out/release out/debug/index.js
 	@echo "Creating $@"
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx rollup ./dist/debug/index.js --file $@ && npx terser -c -m -o $@ $@
+	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx rollup ./out/debug/index.js --file $@ && npx terser -c -m -o $@ $@
 
 # Target that compiles SCSS to CSS.
-dist/release/index.css: node_modules dist/release $(SASS)
+out/release/index.css: node_modules out/release $(SASS)
 	@echo "Creating $@"
 	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx sass --no-source-map ./src/scss/index.scss $@
 
@@ -85,11 +85,11 @@ test: node_modules
 	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx jest
 
 # Target that builds a debug/development version of the app
-debug: dist/debug dist/debug/index.html dist/debug/index.css dist/debug/index.js dist/debug/assets
+debug: out/debug out/debug/index.html out/debug/index.css out/debug/index.js out/debug/assets
 
 # Target that builds a release version of the app
-release: dist/release dist/release/index.html dist/release/index.css dist/release/index.js dist/release/assets
+release: out/release out/release/index.html out/release/index.css out/release/index.js out/release/assets
 
 # Target that builds and runs a debug instance of the project.
 start: debug
-	@docker run --rm --name $(PROJECT) -p $(PORT):80 -v $(CURDIR)/dist/debug:/usr/share/nginx/html/:ro nginx:alpine
+	@docker run --rm --name $(PROJECT) -p $(PORT):80 -v $(CURDIR)/out/debug:/usr/share/nginx/html/:ro nginx:alpine

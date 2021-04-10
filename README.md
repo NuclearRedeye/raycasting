@@ -13,7 +13,7 @@ Experiment to learn about rendering using Ray Casting, implemented in TypeScript
 You can get up and running quickly with...
 
 ```
-make debug
+make
 ```
 
 Then open http://localhost:8080 in your browser.

@@ -14,16 +14,6 @@
   "author": "NuclearRedeye",
   "license": "MIT",
   "homepage": "https://github.com/NuclearRedeye/raycasting#readme",
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
-  },
   "devDependencies": {
     "@nuclearredeye/eslint-config": "1.1.2",
     "@types/jest": "^26.0.19",

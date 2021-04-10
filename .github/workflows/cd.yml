@@ -7,19 +7,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: |
-          make release
-      - name: Format
+      - name: Checking code for styling issues
         run: |
           make format
-      - name: Lint
+      - name: Checking code for linting issues
         run: |
           make lint
-      - name: Test
+      - name: Checking unit tests pass
         run: |
           make test
-      - name: Publish as 'unstable'
+      - name: Checking 'debug' code builds
+        run: |
+          make debug
+      - name: Checking 'release' code builds
+        run: |
+          make release
+      - name: Publishing 'unstable' release to https://hub.docker.com
         if: github.ref == 'refs/heads/master'
         run: |
           docker login -u $DOCKER_USERNAME -p $DOCKER_TOKEN
@@ -29,7 +32,7 @@ jobs:
           REPO_NAME: ${{ github.event.repository.name }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-      - name: Publish as 'stable'
+      - name: Publishing 'stable' release to https://hub.docker.com
         if: contains(github.ref, 'refs/tags/v')
         run: |
           docker login -u $DOCKER_USERNAME -p $DOCKER_TOKEN

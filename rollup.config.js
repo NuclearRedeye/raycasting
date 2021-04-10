@@ -6,28 +6,15 @@ export default [
     input: 'dist/debug/index.js',
     output: [
       {
-        file: 'dist/release/bundle.min.js',
-        name: 'version',
+        file: 'dist/release/index.js',
         plugins: [terser()]
       }
     ],
     plugins: [
       copy({
         targets: [
-          {
-            src: 'src/index.html',
-            dest: 'dist/debug',
-            transform: (contents) => {
-              return contents.toString().replace('__SCRIPT__', 'index.js');
-            }
-          },
-          {
-            src: 'src/index.html',
-            dest: 'dist/release',
-            transform: (contents) => {
-              return contents.toString().replace('__SCRIPT__', 'bundle.min.js');
-            }
-          },
+          { src: 'src/html/*', dest: ['dist/debug', 'dist/release'] },
+          { src: 'src/css/*',  dest: ['dist/debug', 'dist/release'] },
           { src: 'src/assets', dest: ['dist/debug', 'dist/release'] }
         ]
       })

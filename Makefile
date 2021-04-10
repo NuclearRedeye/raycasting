@@ -62,7 +62,7 @@ dist/debug/index.css: node_modules dist/debug $(SASS)
 # Target that bundles, treeshakes and minifies the JavaScript.
 dist/release/index.js: dist/release dist/debug/index.js
 	@echo "Creating $@"
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx rollup ./dist/debug/index.js --file $@ && ./node_modules/.bin/terser -c -m -o $@ $@
+	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx rollup ./dist/debug/index.js --file $@ && npx terser -c -m -o $@ $@
 
 # Target that compiles SCSS to CSS.
 dist/release/index.css: node_modules dist/release $(SASS)
@@ -72,12 +72,12 @@ dist/release/index.css: node_modules dist/release $(SASS)
 # Target that checks the code for style/formating issues.
 format: node_modules
 	@echo "Creating $@"
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx prettier --check "src/**/*.ts"
+	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx prettier --check src/**/*.ts
 
 # Target that lints the code for errors.
 lint: node_modules
 	@echo "Creating $@"
-	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx eslint
+	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx eslint ./src --ext .js,.ts
 
 # Target to run all unit tests.
 test: node_modules

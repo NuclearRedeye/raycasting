@@ -5,8 +5,8 @@ let context: CanvasRenderingContext2D;
 let terminate: boolean = false;
 let start: number;
 let player: Entity;
-let textures: Texture[] = new Array();
-let debug = true;
+const textures: Texture[] = [];
+const debug = true;
 
 const world: number[][] = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -32,16 +32,16 @@ class Entity {
     this.angle = angle;
   }
 
-  rotate(amount: number) {
+  rotate(amount: number): void {
     this.angle += amount;
     this.angle %= 360;
   }
 
-  move(amount: number) {
-    let playerCos = Math.cos(degreesToRadians(this.angle)) * amount;
-    let playerSin = Math.sin(degreesToRadians(this.angle)) * amount;
-    let newX = this.x + playerCos;
-    let newY = this.y + playerSin;
+  move(amount: number): void {
+    const playerCos = Math.cos(degreesToRadians(this.angle)) * amount;
+    const playerSin = Math.sin(degreesToRadians(this.angle)) * amount;
+    const newX = this.x + playerCos;
+    const newY = this.y + playerSin;
 
     // Collision test
     if (world[Math.floor(newY)][Math.floor(newX)] == 0) {
@@ -53,7 +53,6 @@ class Entity {
 
 const width = 640; // The width, in pixels, of the screen.
 const height = 480; // The height, in pixels, of the screen.
-const halfWidth = width / 2; // Half the width of the screen, in pixels.
 const halfHeight = height / 2; // Half the height of the screen, in pixels.
 const columns = width; // The number of columns in the viewport, or basically the number or Rays to cast.
 const fieldOfView = 60; // The field of view, in degrees, of the camera.
@@ -79,7 +78,7 @@ interface Texture {
 
 // Loads the specified image, decodes and copys it to an offscreen canvas and encapsulates it in a Texture object.
 async function createTexture(src: string, width: number, height: number): Promise<Texture> {
-  let texture: Texture = {
+  const texture: Texture = {
     src,
     width,
     height,
@@ -101,12 +100,11 @@ async function createTexture(src: string, width: number, height: number): Promis
   context.fillRect(0, 0, width, height);
   context.drawImage(texture.image, 0, 0, width, height, 0, 0, width, height);
 
-  const imageData = context.getImageData(0, 0, texture.width, texture.height).data;
   return texture;
 }
 
 // Draw a line of the specified colour on the target canvas.
-function drawLine(context: CanvasRenderingContext2D, start: Point, end: Point, colour: string) {
+function drawLine(context: CanvasRenderingContext2D, start: Point, end: Point, colour: string): void {
   context.strokeStyle = colour;
   context.beginPath();
   context.moveTo(start.x, start.y);
@@ -115,12 +113,12 @@ function drawLine(context: CanvasRenderingContext2D, start: Point, end: Point, c
 }
 
 // Function that renders a texture using the drawImage function.
-function drawTexture(context: CanvasRenderingContext2D, start: Point, end: Point, texturePositionX: number, texture: Texture) {
+function drawTexture(context: CanvasRenderingContext2D, start: Point, end: Point, texturePositionX: number, texture: Texture): void {
   context.drawImage(texture.canvas, texturePositionX, 0, 1, texture.height, start.x, start.y, 1, end.y - start.y);
 }
 
 // Renders the specified texture as a parallax skybox.
-function drawSkybox(context: CanvasRenderingContext2D, start: Point, end: Point, texturePositionX: number, texture: Texture) {
+function drawSkybox(context: CanvasRenderingContext2D, start: Point, end: Point, texturePositionX: number, texture: Texture): void {
   const wallHeight = end.y - start.y;
   context.drawImage(texture.canvas, texturePositionX, 0, 1, (wallHeight / height) * texture.height, start.x, start.y, 1, wallHeight);
 }
@@ -144,11 +142,11 @@ function render(): void {
   // We then iterate over and render each vertical scan line of the view port, incrementing the angle by ( FOV / width )
   for (let column = 0; column < columns; column++) {
     // The ray starts from the players current grid position.
-    let ray: Point = { x: player.x, y: player.y };
+    const ray: Point = { x: player.x, y: player.y };
 
     // These are the X and Y amounts that we need to add to check for hits against walls.
-    let rayCos = Math.cos(degreesToRadians(rayAngle)) / precision;
-    let raySin = Math.sin(degreesToRadians(rayAngle)) / precision;
+    const rayCos = Math.cos(degreesToRadians(rayAngle)) / precision;
+    const raySin = Math.sin(degreesToRadians(rayAngle)) / precision;
 
     // We start from the assumption that we're not already in a wall!
     let wall = 0;
@@ -168,13 +166,13 @@ function render(): void {
     distance = distance * Math.cos(degreesToRadians(rayAngle - player.angle));
 
     // Now work out how high the wall should be...
-    let wallHeight = Math.floor(halfHeight / distance);
+    const wallHeight = Math.floor(halfHeight / distance);
 
     // Get texture
-    let texture = textures[wall - 1];
+    const texture = textures[wall - 1];
 
     // Calculate texture position (This is drawing the image mirrored...)
-    let texturePositionX = Math.floor((texture.width * (ray.x + ray.y)) % texture.width);
+    const texturePositionX = Math.floor((texture.width * (ray.x + ray.y)) % texture.width);
 
     // And now we can draw the scanline...
     const start: Point = { x: column, y: 0 };
@@ -200,8 +198,8 @@ function render(): void {
 }
 
 // Main Loop
-function onTick(timestamp: number) {
-  let startTime = performance.now();
+function onTick(timestamp: number): void {
+  const startTime = performance.now();
 
   if (start === undefined) {
     start = timestamp;
@@ -215,7 +213,7 @@ function onTick(timestamp: number) {
   update(elapsed);
   render();
 
-  let endTime = performance.now();
+  const endTime = performance.now();
 
   if (debug) {
     context.fillStyle = 'white';
@@ -229,7 +227,7 @@ function onTick(timestamp: number) {
   }
 }
 
-window.onkeydown = (event: KeyboardEvent) => {
+window.onkeydown = (event: KeyboardEvent): void => {
   switch (event.code) {
     case 'KeyP':
       terminate = true;
@@ -256,7 +254,7 @@ window.onkeydown = (event: KeyboardEvent) => {
   }
 };
 
-window.onkeyup = (event: KeyboardEvent) => {
+window.onkeyup = (event: KeyboardEvent): void => {
   switch (event.code) {
     case 'KeyP':
       terminate = true;
@@ -283,7 +281,7 @@ window.onkeyup = (event: KeyboardEvent) => {
   }
 };
 
-async function load() {
+async function load(): Promise<[number, number, number, number]> {
   return Promise.all([
     textures.push(await createTexture('assets/wall.brick.00.png', 16, 16)),
     textures.push(await createTexture('assets/wall.brick.01.png', 16, 16)),

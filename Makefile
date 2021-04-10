@@ -77,7 +77,7 @@ out/release/index.css: node_modules out/release $(SASS)
 # Target that checks the code for style/formating issues.
 format: node_modules
 	@echo "Running style checks..."
-	@$(DOCKER) node:$(NODE_VERSION) npx prettier --check src/**/*.ts
+	@$(DOCKER) node:$(NODE_VERSION) npx prettier --check .
 
 # Target that lints the code for errors.
 lint: node_modules

@@ -20,14 +20,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NuclearRedeye/typescript-web-application.git"
+    "url": "git+https://github.com/NuclearRedeye/raycasting.git"
   },
   "author": "NuclearRedeye",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/NuclearRedeye/typescript-web-application/issues"
-  },
-  "homepage": "https://github.com/NuclearRedeye/typescript-web-application#readme",
+  "homepage": "https://github.com/NuclearRedeye/raycasting#readme",
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"

@@ -3,19 +3,19 @@ import { terser } from 'rollup-plugin-terser';
 
 export default [
   {
-    input: 'dist/debug/index.js',
+    input: 'out/debug/index.js',
     output: [
       {
-        file: 'dist/release/index.js',
+        file: 'out/release/index.js',
         plugins: [terser()]
       }
     ],
     plugins: [
       copy({
         targets: [
-          { src: 'src/html/*', dest: ['dist/debug', 'dist/release'] },
-          { src: 'src/css/*',  dest: ['dist/debug', 'dist/release'] },
-          { src: 'src/assets', dest: ['dist/debug', 'dist/release'] }
+          { src: 'src/html/*', dest: ['out/debug', 'out/release'] },
+          { src: 'src/css/*',  dest: ['out/debug', 'out/release'] },
+          { src: 'src/assets', dest: ['out/debug', 'out/release'] }
         ]
       })
     ]

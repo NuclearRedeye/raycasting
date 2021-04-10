@@ -18,10 +18,10 @@ jobs:
           make test
       - name: Checking 'debug' code builds
         run: |
-          make debug
+          sudo make debug
       - name: Checking 'release' code builds
         run: |
-          make release
+          sudo make release
       - name: Publishing 'unstable' release to https://hub.docker.com
         if: github.ref == 'refs/heads/master'
         run: |

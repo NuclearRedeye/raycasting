@@ -1,6 +1,6 @@
 
 PROJECT := $(notdir $(CURDIR))
-NODE_VERSION ?= erbium
+NODE_VERSION ?= fermium
 PORT ?= 8080
 
 # Source files that when changed should trigger a rebuild.
@@ -71,17 +71,14 @@ out/release/index.css: node_modules out/release $(SASS)
 
 # Target that checks the code for style/formating issues.
 format: node_modules
-	@echo "Creating $@"
 	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx prettier --check src/**/*.ts
 
 # Target that lints the code for errors.
 lint: node_modules
-	@echo "Creating $@"
 	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx eslint ./src --ext .js,.ts
 
 # Target to run all unit tests.
 test: node_modules
-	@echo "Creating $@"
 	@docker run -it --rm -v $(CURDIR):/$(PROJECT):rw -w=/$(PROJECT) node:$(NODE_VERSION) npx jest
 
 # Target that builds a debug/development version of the app

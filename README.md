@@ -1,4 +1,4 @@
-# raycasting
+# Ray Casting
 
 Experiment to learn about rendering using Ray Casting, implemented in TypeScript.
 
@@ -18,12 +18,15 @@ make
 
 Then open http://localhost:8080 in your browser.
 
-You can also package the entire application in a docker container, ready to distribute.
+You can also package the application into a docker container...
 
 ```
 make release
 docker build -t raycasting:local .
+docker run -p 8080:80 raycasting:local
 ```
+
+And again, then open http://localhost:8080 in your browser.
 
 ## License
 

@@ -1,28 +1,32 @@
 name: Continuous Deployment
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
   cd:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
-      - name: Setup
+      - name: Checking code for styling issues
         run: |
-          npm install
-      - name: Build
+          make format
+      - name: Checking code for linting issues
         run: |
-          npm run build
-      - name: Lint
+          make lint
+      - name: Checking unit tests pass
         run: |
-          npm run lint
-      - name: Test
+          make test
+      - name: Checking 'debug' code builds
         run: |
-          npm run test
-      - name: Publish as 'unstable'
+          sudo make debug
+      - name: Checking 'release' code builds
+        run: |
+          sudo make release
+      - name: Publishing 'unstable' release to https://hub.docker.com
         if: github.ref == 'refs/heads/master'
         run: |
           docker login -u $DOCKER_USERNAME -p $DOCKER_TOKEN
@@ -32,7 +36,7 @@ jobs:
           REPO_NAME: ${{ github.event.repository.name }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
-      - name: Publish as 'stable'
+      - name: Publishing 'stable' release to https://hub.docker.com
         if: contains(github.ref, 'refs/tags/v')
         run: |
           docker login -u $DOCKER_USERNAME -p $DOCKER_TOKEN

@@ -14,12 +14,12 @@ HTML   := $(shell find ./src/ -type f -name *.html)
 # Targets that don't result in output of the same name.
 .PHONY: clean \
         distclean \
-				lint \
-				format \
-				test \
-				debug \
-				release \
-				start
+        lint \
+        format \
+        test \
+        debug \
+        release \
+        start
 
 # When no target is specified, the default target to run.
 .DEFAULT_GOAL := start

@@ -197,7 +197,6 @@ function render(): void {
   }
 }
 
-
 // Main Loop
 function onTick(timestamp: number): void {
   const startTime = performance.now();

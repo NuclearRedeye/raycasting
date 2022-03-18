@@ -1,7 +1,7 @@
 {
   "name": "raycasting",
   "version": "0.0.0",
-  "description": "Experiment to learn about rendering using ray casting",
+  "description": "A simple ray casting engine built using TypeScript",
   "type": "module",
   "repository": {
     "type": "git",

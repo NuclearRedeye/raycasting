@@ -1,4 +1,5 @@
-// Converts a value from Degrees to Radians.
-export function degreesToRadians(value: number): number {
-  return (value * Math.PI) / 180;
+export function createTextElement(message: string): HTMLParagraphElement {
+  const element = document.createElement('p');
+  element.innerHTML = message;
+  return element;
 }

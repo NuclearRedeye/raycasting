@@ -1,6 +1,6 @@
 # Ray Casting
 
-Experiment to learn about rendering using Ray Casting, implemented in TypeScript.
+A simple ray casting engine built using [TypeScript](https://www.typescriptlang.org/).
 
 ## Prerequisites
 

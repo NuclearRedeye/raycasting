@@ -35,11 +35,11 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
   let stepX;
   let stepY;
 
-  // Calculate the distance from one cell boundry to the next boundry in the X or Y direction.
+  // Calculate the distance from one cell boundary to the next boundary in the X or Y direction.
   const deltaDistanceX = Math.abs(1 / rayDirectionX);
   const deltaDistanceY = Math.abs(1 / rayDirectionY);
 
-  // Calculate the distance from the entity's origin to the first boundry in the X or Y direction.
+  // Calculate the distance from the entity's origin to the first boundary in the X or Y direction.
   let sideDistanceX;
   let sideDistanceY;
 
@@ -67,9 +67,9 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
   // Tracks if the DDA step was in the X or the Y axis.
   let side;
 
-  // Use DDA to step through all the cell boundries the ray touches.
+  // Use DDA to step through all the cell boundaries the ray touches.
   while (count++ < maxDepth) {
-    // Step in either the X or the Y direction, moving the X and Y position to the next cell boundry.
+    // Step in either the X or the Y direction, moving the X and Y position to the next cell boundary.
     if (sideDistanceX < sideDistanceY) {
       sideDistanceX += deltaDistanceX;
       mapX += stepX;
@@ -118,7 +118,7 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
   return undefined;
 }
 
-// Function to render the specifed sprite, from the perspective of the specified entiry, to the specified canvas.
+// Function to render the specified sprite, from the perspective of the specified entity, to the specified canvas.
 export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, depthBuffer: number[], sprite: Sprite): void {
   // Get the texture for the sprite
   const texture = getTextureById(sprite.textureId);
@@ -234,7 +234,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
       };
 
       // The location to render that texture to in the framebuffer.
-      const destinationRectange: Rectangle = {
+      const destinationRectangle: Rectangle = {
         x: column,
         y: drawStartY + drawStartYOffset,
         width: 1,
@@ -242,11 +242,11 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
       };
 
       // Draw the sprite to the screen.
-      drawTexture(context, texture, sourceRectangle, destinationRectange);
+      drawTexture(context, texture, sourceRectangle, destinationRectangle);
 
       // Apply a darkened tint to the sprite, based on its distance from the entity.
       if (isSpriteTinted(sprite)) {
-        drawTint(context, destinationRectange, ((height / (sprite.distance || 0)) * 1.6) / height);
+        drawTint(context, destinationRectangle, ((height / (sprite.distance || 0)) * 1.6) / height);
       }
     }
   }
@@ -398,7 +398,7 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
       };
 
       // The location to render that texture to in the framebuffer.
-      const destinationRectange: Rectangle = {
+      const destinationRectangle: Rectangle = {
         x: column,
         y: wallY,
         width: 1,
@@ -406,13 +406,14 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
       };
 
       // Draw the wall to the framebuffer.
-      drawTexture(context, texture, sourceRectangle, destinationRectange);
+      drawTexture(context, texture, sourceRectangle, destinationRectangle);
 
       // Apply a darkened tint to the wall, based on its distance from the entity.
-      drawTint(context, destinationRectange, (wallHeight * 1.6) / height);
+      drawTint(context, destinationRectangle, (wallHeight * 1.6) / height);
     }
   }
 
+  // FIXME: On level load, create a linked list for active sprites and use that rather than allocate this each frame.
   // Prepare the sprites...
   const sprites: Sprite[] = [...level.sprites];
   for (const sprite of sprites) {
@@ -421,11 +422,11 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
 
   // Sort sprites from far to close
   sprites.sort((a, b) => {
-    // FIXME: Possivly undefined
+    // FIXME: Possibly undefined
     return (b.distance || 0) - (a.distance || 0);
   });
 
-  //after sorting the sprites, do the projection and draw them
+  // After sorting the sprites, do the projection and draw them
   for (let i = 0; i < sprites.length; i++) {
     // For ease...
     const sprite = sprites[i];

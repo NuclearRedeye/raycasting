@@ -70,7 +70,7 @@ export function getTextureById(id: number): Texture {
   return textures[id - 1];
 }
 
-// Loads the specified image, decodes and copys it to an offscreen canvas and encapsulates it in a Texture object.
+// Loads the specified image, decodes and copies it to an offscreen canvas and encapsulates it in a Texture object.
 export async function loadTexture(texture: Texture): Promise<Texture> {
   // Check that the texture has not already been loaded.
   if (isTextureLoaded(texture)) {

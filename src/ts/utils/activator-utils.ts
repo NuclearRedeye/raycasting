@@ -1,6 +1,6 @@
 import { Cell } from '../interfaces/cell';
 
-// Toogles the specified cells state between 0 and 1.
+// Toggles the specified cells state between 0 and 1.
 export function activatorToggle(cell: Cell): void {
   cell.state = cell.state === 0 ? 1 : 0;
 }

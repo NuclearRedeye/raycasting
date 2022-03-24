@@ -14,7 +14,7 @@ export function checkEntityCollision(a: Circle, b: Circle): boolean {
 }
 
 export function checkEntityWithCell(entity: Circle, rectangle: Rectangle): boolean {
-  // temporay variables to set edges for testing
+  // Temporary variables to set edges for testing
   let testX = entity.x;
   let testY = entity.y;
 

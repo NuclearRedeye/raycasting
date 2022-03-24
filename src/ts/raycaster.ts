@@ -5,7 +5,7 @@ import { Rectangle } from './interfaces/rectangle';
 import { CastResult } from './interfaces/raycaster';
 
 import { Face } from './enums.js';
-import { canvasWidth, canvasHeight } from './config.js';
+import { backBufferProps } from './config.js';
 import { drawGradient, drawTexture, drawTint } from './utils/canvas-utils.js';
 import { getTexture, isSolid } from './utils/cell-utils.js';
 import { getCell } from './utils/level-utils.js';
@@ -15,8 +15,8 @@ import { isSpriteAlignedBottom, isSpriteAlignedTop, isSpriteStatic, isSpriteTint
 import { radiansToDegrees } from './utils/math-utils.js';
 
 // FIXME: These should be in a config object or similar
-const width = canvasWidth; // The width, in pixels, of the screen.
-const height = canvasHeight; // The height, in pixels, of the screen.
+const width = backBufferProps.width; // The width, in pixels, of the screen.
+const height = backBufferProps.height; // The height, in pixels, of the screen.
 const halfHeight = height / 2; // Half the height of the screen, in pixels.
 const columns = width; // The number of columns in the viewport, or basically the number or Rays to cast.
 
@@ -136,10 +136,10 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   const spriteScreenX = Math.floor((width / 2) * (1 + transformX / transformY));
 
   // Calculate the height of the sprite.
-  const spriteHeight = Math.abs(Math.floor(height / transformY)) * sprite.scale;
+  const spriteHeight = Math.abs(Math.round(Math.floor(height / transformY) * sprite.scale));
 
   // Calculate the width of the sprite.
-  const spriteWidth = Math.abs(Math.floor(height / transformY)) * sprite.scale;
+  const spriteWidth = Math.abs(Math.round(Math.floor(height / transformY) * sprite.scale));
 
   // Calculate where to start drawing the sprite on the Y Axis.
   let drawStartY = Math.floor(-spriteHeight / 2 + height / 2);
@@ -167,18 +167,18 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
 
   // Calculate the Y offset within the texture to start drawing from.
   const texStartYD = drawStartY * 256 - height * 128 + spriteHeight * 128;
-  const texStartY = (texStartYD * texture.height) / spriteHeight / 256;
+  const texStartY = Math.round((texStartYD * texture.height) / spriteHeight / 256);
 
-  // Calculate the Y offset withing the texture to stop drawing from.
+  // Calculate the Y offset within the texture to stop drawing from.
   const texEndYD = (drawEndY - 1) * 256 - height * 128 + spriteHeight * 128;
-  const texEndY = (texEndYD * texture.height) / spriteHeight / 256;
+  const texEndY = Math.round((texEndYD * texture.height) / spriteHeight / 256);
 
   // Calculate the vertical offset which enables vertical alignment of the sprite to the floor or ceiling.
   let drawStartYOffset = 0;
   if (isSpriteAlignedTop(sprite)) {
-    drawStartYOffset = -Math.floor(256 / transformY) + spriteHeight / 2;
+    drawStartYOffset = -Math.floor(256 / transformY) + Math.round(spriteHeight / 2);
   } else if (isSpriteAlignedBottom(sprite)) {
-    drawStartYOffset = Math.floor(256 / transformY) - spriteHeight / 2;
+    drawStartYOffset = Math.floor(256 / transformY) - Math.round(spriteHeight / 2);
   }
 
   // Then, for each column draw a vertical strip of the sprite.

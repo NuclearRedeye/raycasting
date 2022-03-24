@@ -7,7 +7,7 @@ import { castRay } from '../raycaster.js';
 import { setCurrentLevel } from '../state.js';
 import { getTexture, isBlocked, isInteractive, isSolid } from '../utils/cell-utils.js';
 import { getCell } from '../utils/level-utils.js';
-import { canvasWidth } from '../config.js';
+import { backBufferProps } from '../config.js';
 import { isTextureStateful } from '../utils/texture-utils.js';
 
 export class Player implements Movable {
@@ -77,7 +77,7 @@ export class Player implements Movable {
   }
 
   interact(level: Level): void {
-    const result = castRay(canvasWidth / 2, this, level);
+    const result = castRay(backBufferProps.width / 2, this, level);
     if (result != undefined) {
       const cell = result.cell;
       const texture = getTexture(result.cell, result.face);

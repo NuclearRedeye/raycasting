@@ -1,15 +1,18 @@
-import { createTextElement } from './utils/utils.js';
 import { Mark, getCurrentFramesPerSecond, getDelta, getElapsed } from './utils/time-utils.js';
-import { canvasWidth, canvasHeight } from './config.js';
+import { backBufferProps } from './config.js';
 import { levels } from './data/levels/levels.js';
 import { render } from './raycaster.js';
 import { getCurrentLevel, getGameState, getPlayer, setCurrentLevel, states } from './state.js';
 import { checkEntityCollision } from './utils/collision-utils.js';
 import { getLevelName } from './utils/level-utils.js';
+import { Rectangle } from './interfaces/rectangle.js';
 
 // Globals
-let canvas: HTMLCanvasElement;
-let context: CanvasRenderingContext2D;
+let backBufferCanvas: HTMLCanvasElement;
+let backBuffer: CanvasRenderingContext2D;
+let frontBufferCanvas: HTMLCanvasElement;
+let frontBuffer: CanvasRenderingContext2D;
+let frontBufferProps: Rectangle;
 
 // States
 let pause: boolean = false;
@@ -65,42 +68,44 @@ function onTick(timestamp: number): void {
     // Mark the timer
     Mark(timestamp);
 
-    // Clear the Canvas, although no real need as we will be drawing over every pixel.
-    context.clearRect(0, 0, canvasWidth, canvasHeight);
+    // Clear the screen
+    frontBuffer.fillStyle = 'black';
+    frontBuffer.fillRect(0, 0, frontBufferCanvas.width, frontBufferCanvas.height);
 
     switch (getGameState()) {
       case states.LOADING:
-        context.fillStyle = 'black';
-        context.fillRect(0, 0, canvasWidth, canvasHeight);
-        context.font = '24px serif';
-        context.textBaseline = 'middle';
-        context.textAlign = 'center';
-        context.fillStyle = 'white';
-        context.fillText(`${getLevelName(getCurrentLevel())}`, canvasWidth / 2, canvasHeight / 2);
+        frontBuffer.fillStyle = 'black';
+        frontBuffer.fillRect(frontBufferProps.x, frontBufferProps.y, frontBufferProps.width, frontBufferProps.height);
+        frontBuffer.font = '24px serif';
+        frontBuffer.textBaseline = 'middle';
+        frontBuffer.textAlign = 'center';
+        frontBuffer.fillStyle = 'white';
+        frontBuffer.fillText(`${getLevelName(getCurrentLevel())}`, frontBufferProps.x + frontBufferProps.width / 2, frontBufferProps.y + frontBufferProps.height / 2);
         break;
 
       case states.LOADED:
         update(getDelta());
-        render(context, getPlayer(), getCurrentLevel());
-        context.font = '24px serif';
-        context.textBaseline = 'top';
-        context.fillStyle = 'white';
-        context.textAlign = 'end';
-        context.fillText(`${score}`, canvasWidth - 10, 10);
+        render(backBuffer, getPlayer(), getCurrentLevel());
+        frontBuffer.drawImage(backBufferCanvas, 0, 0, backBufferProps.width, backBufferProps.height, frontBufferProps.x, frontBufferProps.y, frontBufferProps.width, frontBufferProps.height);
+        frontBuffer.font = '24px serif';
+        frontBuffer.textBaseline = 'top';
+        frontBuffer.fillStyle = 'white';
+        frontBuffer.textAlign = 'end';
+        frontBuffer.fillText(`${score}`, frontBufferProps.x + frontBufferProps.width - 10, frontBufferProps.y + 10);
         break;
     }
 
     // If 'debug' is enabled, print various stats.
     if (debug) {
-      context.fillStyle = 'white';
-      context.font = '12px serif';
-      context.textAlign = 'start';
-      context.fillText(`Current FPS: ${getCurrentFramesPerSecond().toFixed(2)}`, 10, 10);
-      context.fillText(`Previous FT: ${getDelta().toFixed(2)}`, 10, 30);
-      context.fillText(`Runtime: ${getElapsed().toFixed(2)} seconds`, 10, 50);
+      frontBuffer.fillStyle = 'white';
+      frontBuffer.font = '12px serif';
+      frontBuffer.textAlign = 'start';
+      frontBuffer.fillText(`Current FPS: ${getCurrentFramesPerSecond().toFixed(2)}`, frontBufferProps.x + 10, frontBufferProps.y + 10);
+      frontBuffer.fillText(`Previous FT: ${getDelta().toFixed(2)}`, frontBufferProps.x + 10, frontBufferProps.y + 30);
+      frontBuffer.fillText(`Runtime: ${getElapsed().toFixed(2)} seconds`, frontBufferProps.x + 10, frontBufferProps.y + 50);
       const player = getPlayer();
-      context.fillText(`Player Pos: (${player.x}, ${player.y})`, 10, 70);
-      context.fillText(`Player Dir: (${player.dx}, ${player.dy})`, 10, 90);
+      frontBuffer.fillText(`Player Pos: (${player.x}, ${player.y})`, frontBufferProps.x + 10, frontBufferProps.y + 70);
+      frontBuffer.fillText(`Player Dir: (${player.dx}, ${player.dy})`, frontBufferProps.x + 10, frontBufferProps.y + 90);
     }
   }
 
@@ -172,14 +177,37 @@ window.onkeyup = (event: KeyboardEvent): void => {
   }
 };
 
+function onResize(): void {
+  frontBufferCanvas.width = window.innerWidth;
+  frontBufferCanvas.height = window.innerHeight;
+
+  const ratio = Math.min(frontBufferCanvas.width / backBufferProps.width, frontBufferCanvas.height / backBufferProps.height);
+  const width = frontBufferCanvas.width - backBufferProps.width * ratio;
+  const height = frontBufferCanvas.height - backBufferProps.height * ratio;
+  frontBufferProps = {
+    x: width / 2,
+    y: height / 2,
+    width: frontBufferCanvas.width - width,
+    height: frontBufferCanvas.height - height
+  };
+}
+
+window.onresize = onResize;
+
 window.onload = function (): void {
-  canvas = document.createElement('canvas') as HTMLCanvasElement;
-  canvas.width = canvasWidth;
-  canvas.height = canvasHeight;
-  context = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
-  context.imageSmoothingEnabled = false;
-  document.body.appendChild(canvas);
-  document.body.appendChild(createTextElement('Created by NuclearRedeye'));
+  backBufferCanvas = document.createElement('canvas') as HTMLCanvasElement;
+  backBufferCanvas.width = backBufferProps.width;
+  backBufferCanvas.height = backBufferProps.height;
+  backBuffer = backBufferCanvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
+  backBuffer.imageSmoothingEnabled = false;
+
+  frontBufferCanvas = document.createElement('canvas') as HTMLCanvasElement;
+  frontBuffer = frontBufferCanvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
+  frontBuffer.imageSmoothingEnabled = false;
+
+  onResize();
+
+  document.body.appendChild(frontBufferCanvas);
   window.requestAnimationFrame(onTick);
   setCurrentLevel(levels[0], levels[0].entrance);
 };

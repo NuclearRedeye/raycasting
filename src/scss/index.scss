@@ -5,13 +5,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 30px;
-}
-
-a {
-  color: burlywood;
-}
-
-canvas {
-  border: 2px solid black;
+  overflow: hidden;
+  margin: 0px;
+  padding: 0px;
 }

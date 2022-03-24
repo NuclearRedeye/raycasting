@@ -3,8 +3,8 @@ let current: number;
 let previous: number;
 
 // Pauses for the desired amount of time.
-export function sleep(miliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, miliseconds));
+export function sleep(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 export function Mark(timestamp: number): void {

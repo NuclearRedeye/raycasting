@@ -188,7 +188,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
     texXAnimationOffset = frame * texture.width;
   }
 
-  // If the sprite is static, then calculate which frame to render relative to the entities position
+  // If the sprite is static, then calculate which frame to render relative to the entity's position
   if (isSpriteStatic(sprite)) {
     const radians = Math.atan2(sprite.y - entity.y, sprite.x - entity.x);
 
@@ -282,9 +282,9 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
   const rayDirY1 = entity.dy + entity.cy;
 
   // For each row from the horizon to the bottom of the screen.
-  for (let y = 1; y < halfHeight; y++) {
+  for (let y = 0; y < halfHeight; y++) {
     // Calculate the distance from the camera to the floor for the current row.
-    const rowDistance = halfHeight / y;
+    const rowDistance = y > 0 ? halfHeight / y : halfHeight;
 
     // Calculate the real world step vector we have to add for each x (parallel to camera plane)
     // adding step by step avoids multiplications with a weight in the inner loop
@@ -352,7 +352,7 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
   }
 
   // Copy the data from the temporary floor data buffer to the framebuffer.
-  context.putImageData(floor, 0, halfHeight - 1);
+  context.putImageData(floor, 0, halfHeight);
 
   // FIXME: This is a lazy way to add some shading to the floor, would be better to do this when setting the pixel data in the buffer.
   drawGradient(context, { x: 0, y: halfHeight - 1 }, { x: width, y: height }, 'rgba(0,0,0,180)', 'transparent');
@@ -367,7 +367,7 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
       // Stick the distance into the Depth Buffer
       depthBuffer[column] = result.distance;
 
-      // Calculate the height the wall should be rendered at from the distance from the entity.
+      // Calculate the height the wall should be rendered at based on its distance from the entity.
       const wallHeight = Math.abs(Math.floor(height / result.distance));
 
       // Calculate the position on the Y axis of the viewport to start drawing the wall from.

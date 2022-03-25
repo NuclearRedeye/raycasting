@@ -89,7 +89,7 @@ lint: node_modules
 # Target to run all unit tests.
 test: node_modules
 	@echo "Running unit tests..."
-	@$(DOCKER) node:$(NODE_VERSION) npx jest
+	@$(DOCKER) node:$(NODE_VERSION) npx jest --passWithNoTests
 
 # Target that builds a debug/development version of the app
 debug: out/debug out/debug/index.html out/debug/index.css out/debug/index.js out/debug/assets

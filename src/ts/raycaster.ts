@@ -371,7 +371,7 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
       const wallHeight = Math.abs(Math.floor(height / result.distance));
 
       // Calculate the position on the Y axis of the viewport to start drawing the wall from.
-      const wallY = -wallHeight / 2 + height / 2;
+      const wallY = -wallHeight / 2 + height / 2; // + 1; FIXME: Workaround issue where from a certain distance the floor is visible under a wall
 
       // Get the texture for the solid cell.
       const texture = getTexture(result.cell, result.face);

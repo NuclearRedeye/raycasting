@@ -37,6 +37,11 @@ export function isInteractive(cell: Cell): number {
   return cellHasProperty(cell, CellProperties.INTERACTIVE);
 }
 
+// Utility function to determine if the specified cell is thin.
+export function isThin(cell: Cell): number {
+  return cellHasProperty(cell, CellProperties.THIN);
+}
+
 // Utility function to get the texture ID for the specific face in the specified cell.
 export function getTexture(cell: Cell, face: Face = Face.NORTH): Texture {
   return getTextureById(cell.textureIds[face]);
@@ -63,6 +68,12 @@ export function createSimpleWall(textureId: number): Cell {
 export function createInvisibleWall(textureId: number): Cell {
   const textureIds = new Array(6).fill(textureId);
   return createCell(CellType.FLOOR, textureIds, CellProperties.BLOCKED);
+}
+
+// Utility function to create a Door Cell.
+export function createThinWall(textureId: number): Cell {
+  const textureIds = new Array(6).fill(textureId);
+  return createCell(CellType.WALL, textureIds, CellProperties.SOLID | CellProperties.THIN);
 }
 
 // Utility function to create an ENTRANCE Cell.

@@ -10,7 +10,7 @@ import { drawGradient, drawTexture, drawTint } from './utils/canvas-utils.js';
 import { getTexture, isSolid } from './utils/cell-utils.js';
 import { getCell } from './utils/level-utils.js';
 import { getAnimationFrame } from './utils/time-utils.js';
-import { getTextureById, isTextureAnimated, isTextureStateful } from './utils/texture-utils.js';
+import { applyEffectTint, getTextureById, isTextureAnimated, isTextureStateful } from './utils/texture-utils.js';
 import { isSpriteAlignedBottom, isSpriteAlignedTop, isSpriteStatic, isSpriteTinted } from './utils/sprite-utils.js';
 import { radiansToDegrees } from './utils/math-utils.js';
 
@@ -181,6 +181,39 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
     drawStartYOffset = Math.floor(256 / transformY) - Math.round(spriteHeight / 2);
   }
 
+  // If the object is animated, then calculate the offset for the frame within the texture.
+  let texXAnimationOffset = 0;
+  if (isTextureAnimated(texture)) {
+    const frame = getAnimationFrame();
+    texXAnimationOffset = frame * texture.width;
+  }
+
+  // If the sprite is static, then calculate which frame to render relative to the entities position
+  if (isSpriteStatic(sprite)) {
+    const radians = Math.atan2(sprite.y - entity.y, sprite.x - entity.x);
+
+    // FIXME: Do I even need to convert this back to degrees?
+    let degrees = radiansToDegrees(radians);
+
+    // FIXME: This slightly offsets the sprite by 1/2 a frame in degrees, but could probably handle this by applying a rotation to the sprite.
+    degrees += 360 / texture.frames / 2;
+    if (degrees < 0) {
+      degrees += 360;
+    }
+    if (degrees >= 360) {
+      degrees -= 360;
+    }
+
+    // Calculate the specific frame to display
+    const frame = Math.floor((texture.frames / 360) * degrees);
+    texXAnimationOffset = frame * texture.width;
+  }
+
+  // Apply a darkened tint to the sprite, based on its distance from the entity.
+  if (isSpriteTinted(sprite)) {
+    applyEffectTint(texture, texXAnimationOffset, ((height / (sprite.distance || 0)) * 1.6) / height);
+  }
+
   // Then, for each column draw a vertical strip of the sprite.
   for (let column = drawStartX; column < drawEndX; column++) {
     // Only draw the sprite if..
@@ -195,34 +228,6 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
       // FIXME: This works around a rounding error that can occur above.
       if (texX < 0) {
         texX = 0;
-      }
-
-      // If the object is animated, then calculate the offset for the frame within the texture.
-      let texXAnimationOffset = 0;
-      if (isTextureAnimated(texture)) {
-        const frame = getAnimationFrame();
-        texXAnimationOffset = frame * texture.width;
-      }
-
-      // If the sprite is static, then calculate which frame to render
-      if (isSpriteStatic(sprite)) {
-        const radians = Math.atan2(sprite.y - entity.y, sprite.x - entity.x);
-
-        // FIXME: Do I even need to convert this back to degrees?
-        let degrees = radiansToDegrees(radians);
-
-        // FIXME: This slightly offsets the sprite by 1/2 a frame in degrees, but could probably handle this by applying a rotation to the sprite.
-        degrees += 360 / texture.frames / 2;
-        if (degrees < 0) {
-          degrees += 360;
-        }
-        if (degrees >= 360) {
-          degrees -= 360;
-        }
-
-        // Calculate the specific frame to display
-        const frame = Math.floor((texture.frames / 360) * degrees);
-        texXAnimationOffset = frame * texture.width;
       }
 
       // The slice of the texture that we want to render to the framebuffer.
@@ -241,13 +246,16 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
         height: spriteHeight
       };
 
-      // Draw the sprite to the screen.
-      drawTexture(context, texture, sourceRectangle, destinationRectangle);
+      let canvas = texture.canvas;
 
       // Apply a darkened tint to the sprite, based on its distance from the entity.
       if (isSpriteTinted(sprite)) {
-        drawTint(context, destinationRectangle, ((height / (sprite.distance || 0)) * 1.6) / height);
+        canvas = texture.effect as HTMLCanvasElement;
+        sourceRectangle.x = texX;
       }
+
+      // Draw the sprite to the screen.
+      drawTexture(context, canvas as HTMLCanvasElement, sourceRectangle, destinationRectangle);
     }
   }
 }
@@ -406,7 +414,7 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
       };
 
       // Draw the wall to the framebuffer.
-      drawTexture(context, texture, sourceRectangle, destinationRectangle);
+      drawTexture(context, texture.canvas as HTMLCanvasElement, sourceRectangle, destinationRectangle);
 
       // Apply a darkened tint to the wall, based on its distance from the entity.
       drawTint(context, destinationRectangle, (wallHeight * 1.6) / height);

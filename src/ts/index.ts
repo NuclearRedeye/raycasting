@@ -184,6 +184,7 @@ function onResize(): void {
   const ratio = Math.min(frontBufferCanvas.width / backBufferProps.width, frontBufferCanvas.height / backBufferProps.height);
   const width = frontBufferCanvas.width - backBufferProps.width * ratio;
   const height = frontBufferCanvas.height - backBufferProps.height * ratio;
+
   frontBufferProps = {
     x: width / 2,
     y: height / 2,

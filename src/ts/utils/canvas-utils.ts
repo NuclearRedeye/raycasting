@@ -37,8 +37,8 @@ export function drawGradient(context: CanvasRenderingContext2D, start: Point, en
 }
 
 // Draws the specified texture at the specified location on the target canvas.
-export function drawTexture(context: CanvasRenderingContext2D, texture: Texture, source: Rectangle, destination: Rectangle): void {
-  context.drawImage(texture.canvas as HTMLCanvasElement, source.x, source.y, source.width, source.height, destination.x, destination.y, destination.width, destination.height);
+export function drawTexture(context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, source: Rectangle, destination: Rectangle): void {
+  context.drawImage(canvas as HTMLCanvasElement, source.x, source.y, source.width, source.height, destination.x, destination.y, destination.width, destination.height);
 }
 
 // Draws the specified texture as a Skybox at the specified location on the target canvas.

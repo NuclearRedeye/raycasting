@@ -13,4 +13,5 @@ export interface Texture {
   properties: TextureProperties; // Flags to store any special properties of the texture.
   canvas?: HTMLCanvasElement; // Handle to the Offscreen Canvas for this Texture data.
   buffer?: Uint8ClampedArray; // Raw pixel data for the Texture.
+  effect?: HTMLCanvasElement; // Handle to the Offscreen Canvas for effect purposes.
 }

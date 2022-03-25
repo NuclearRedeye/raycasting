@@ -2,6 +2,7 @@ import { Texture } from '../interfaces/texture';
 
 import { TextureState, TextureProperties } from '../enums.js';
 import { textures } from '../data/textures/textures.js';
+import { drawTint } from './canvas-utils.js';
 
 // Creates a new Texture using the specified input
 function createTexture(id: number, imageUrl: string, imageWidth: number, imageHeight: number, width: number, height: number, properties: number): Texture {
@@ -98,21 +99,38 @@ export async function loadTexture(texture: Texture): Promise<Texture> {
   // Blit the image to the the canvas.
   // NOTE: Using a Canvas as a source for drawImage should be faster than using an Image.
   const context = canvas.getContext('2d') as CanvasRenderingContext2D;
-  context.fillStyle = 'transparent';
-  context.fillRect(0, 0, texture.imageWidth, texture.imageHeight);
+  context.clearRect(0, 0, texture.imageWidth, texture.imageHeight);
   context.drawImage(image, 0, 0, texture.imageWidth, texture.imageHeight);
 
   // Store the raw pixel data
   // NOTE: Store the raw rgba for the image in a memory buffer so that certain single pixel draw operations can be optimised.
   const buffer = context.getImageData(0, 0, texture.imageWidth, texture.imageHeight).data;
 
+  // Create an offscreen canvas.
+  const effect: HTMLCanvasElement = document.createElement('canvas');
+  effect.width = texture.width;
+  effect.height = texture.height;
+
   // Update the texture with handles to the canvas and buffer.
   texture.canvas = canvas;
   texture.buffer = buffer;
+  texture.effect = effect;
 
   // Update the state of the of the Texture.
   texture.state = TextureState.LOADED;
 
   // Return the updated texture.
   return texture;
+}
+
+export function applyEffectTint(texture: Texture, offset: number, value: number): void {
+  const canvas = texture.effect as HTMLCanvasElement;
+  const context = canvas.getContext('2d') as CanvasRenderingContext2D;
+
+  context.clearRect(0, 0, texture.width, texture.height);
+  context.globalCompositeOperation = 'source-over';
+  context.drawImage(texture.canvas as HTMLCanvasElement, offset, 0, texture.width, texture.height, 0, 0, texture.width, texture.height);
+
+  context.globalCompositeOperation = 'source-atop';
+  drawTint(context, { x: 0, y: 0, width: canvas.width, height: canvas.height }, value);
 }

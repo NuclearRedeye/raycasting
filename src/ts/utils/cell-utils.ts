@@ -4,7 +4,7 @@ import { Cell } from '../interfaces/cell';
 import { CellProperties, CellType, Face } from '../enums.js';
 import { getTextureById } from './texture-utils.js';
 import { Texture } from '../interfaces/texture.js';
-import { activatorIncrement, activatorToggle } from './activator-utils.js';
+import { activatorIncrement, activatorToggle, activatorDoor } from './activator-utils.js';
 
 // Generic function to create a Cell.
 function createCell(type: CellType, textureIds: number[], properties: number = 0): Cell {
@@ -24,12 +24,20 @@ function cellHasProperty(cell: Cell, property: CellProperties): number {
 
 // Utility function to determine if the specified cell is solid.
 export function isSolid(cell: Cell): number {
-  return cellHasProperty(cell, CellProperties.SOLID);
+  let retVal = cellHasProperty(cell, CellProperties.SOLID);
+  if (cell.type == CellType.DOOR && cell.state === 0) {
+    retVal = 0;
+  }
+  return retVal;
 }
 
 // Utility function to determine if the specified cell is blocked.
 export function isBlocked(cell: Cell): number {
-  return cellHasProperty(cell, CellProperties.BLOCKED);
+  let retVal = cellHasProperty(cell, CellProperties.BLOCKED);
+  if (cell.type == CellType.DOOR && cell.state === 0) {
+    retVal = 0;
+  }
+  return retVal;
 }
 
 // Utility function to determine if the specified cell is solid.
@@ -40,6 +48,11 @@ export function isInteractive(cell: Cell): number {
 // Utility function to determine if the specified cell is thin.
 export function isThin(cell: Cell): number {
   return cellHasProperty(cell, CellProperties.THIN);
+}
+
+// Utility function to determine if the specified cell is thin.
+export function isDoor(cell: Cell): boolean {
+  return cell.type === CellType.DOOR;
 }
 
 // Utility function to get the texture ID for the specific face in the specified cell.
@@ -70,10 +83,19 @@ export function createInvisibleWall(textureId: number): Cell {
   return createCell(CellType.FLOOR, textureIds, CellProperties.BLOCKED);
 }
 
-// Utility function to create a Door Cell.
+// Utility function to create a Thin Wall.
 export function createThinWall(textureId: number): Cell {
   const textureIds = new Array(6).fill(textureId);
   return createCell(CellType.WALL, textureIds, CellProperties.SOLID | CellProperties.THIN);
+}
+
+// Utility function to create a Door.
+export function createDoor(textureId: number): Cell {
+  const textureIds = new Array(6).fill(textureId);
+  const cell = createCell(CellType.DOOR, textureIds, CellProperties.SOLID | CellProperties.THIN | CellProperties.INTERACTIVE);
+  cell.activators.push(activatorDoor);
+  cell.state = 100;
+  return cell;
 }
 
 // Utility function to create an ENTRANCE Cell.

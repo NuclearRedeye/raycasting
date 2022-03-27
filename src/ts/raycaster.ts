@@ -8,7 +8,7 @@ import { Point } from './interfaces/point';
 import { Face } from './enums.js';
 import { backBufferProps } from './config.js';
 import { drawGradient, drawTexture, drawTint } from './utils/canvas-utils.js';
-import { getTexture, isSolid, isThin } from './utils/cell-utils.js';
+import { getTexture, isDoor, isSolid, isThin } from './utils/cell-utils.js';
 import { getCell } from './utils/level-utils.js';
 import { getAnimationFrame } from './utils/time-utils.js';
 import { applyEffectTint, getTextureById, isTextureAnimated, isTextureStateful } from './utils/texture-utils.js';
@@ -103,8 +103,25 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
             // FIXME: When updating this function to return a drawing list, this will need to be reversed before the loop continues.
             castCell.x += castStep.x * 0.5;
           }
+
           distance = Math.abs((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX);
           wall = entity.y + ((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX) * rayDirectionY;
+          wall -= Math.floor(wall);
+
+          // If the cell is a door, the account for the door opening or closing.
+          if (isDoor(cell)) {
+            // Calculate the percentage that the door is open.
+            const doorOpenPercent = 0.01 * cell.state;
+
+            // Check if the ray hits the door, and if not continue to cast.
+            if (wall > doorOpenPercent) {
+              castCell.x -= castStep.x * 0.5;
+              continue;
+            }
+
+            // Offset the texture for the door based on how open it is.
+            wall = doorOpenPercent - wall;
+          }
           break;
 
         case Face.NORTH:
@@ -120,11 +137,23 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
           }
           distance = Math.abs((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY);
           wall = entity.x + ((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY) * rayDirectionX;
+          wall -= Math.floor(wall);
+
+          if (isDoor(cell)) {
+            // Calculate the percentage that the door is open.
+            const doorOpenPercent = 0.01 * cell.state;
+
+            // Check if the ray hits the door, and if not continue to cast.
+            if (wall > doorOpenPercent) {
+              castCell.y -= castStep.y * 0.5;
+              continue;
+            }
+
+            // Offset the texture for the door based on how open it is.
+            wall = doorOpenPercent - wall;
+          }
           break;
       }
-
-      // TODO: Why is this essential?
-      wall -= Math.floor(wall);
 
       return {
         ...castCell,

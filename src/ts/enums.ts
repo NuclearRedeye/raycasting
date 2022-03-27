@@ -1,6 +1,7 @@
 export enum CellType {
   FLOOR,
   WALL,
+  DOOR,
   ENTRANCE,
   EXIT
 }

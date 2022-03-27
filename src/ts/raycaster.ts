@@ -95,9 +95,12 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
         case Face.EAST:
         case Face.WEST:
           if (isThin(cell)) {
+            // Check if the ray hits the center line of the thin wall, if not then it will hit the adjacent cell hence continue.
             if (castDistance.x - deltaDistanceX * 0.5 > castDistance.y) {
               continue;
             }
+
+            // FIXME: When updating this function to return a drawing list, this will need to be reversed before the loop continues.
             castCell.x += castStep.x * 0.5;
           }
           distance = Math.abs((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX);
@@ -107,9 +110,12 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
         case Face.NORTH:
         case Face.SOUTH:
           if (isThin(cell)) {
+            // Check if the ray hits the center line of the thin wall, if not then it will hit the adjacent cell hence continue.
             if (castDistance.y - deltaDistanceY * 0.5 > castDistance.x) {
               continue;
             }
+
+            // FIXME: When updating this function to return a drawing list, this will need to be reversed before the loop continues.
             castCell.y += castStep.y * 0.5;
           }
           distance = Math.abs((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY);

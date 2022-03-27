@@ -1,14 +1,112 @@
 import { Movable } from '../interfaces/movable';
 import { Level } from '../interfaces/level';
+import { Point } from '../interfaces/point';
+import { Entity } from '../interfaces/entity';
 
-import { CellType } from '../enums.js';
+import { CellType, Face } from '../enums.js';
 import { levels } from '../data/levels/levels.js';
-import { castRay } from '../raycaster.js';
 import { setCurrentLevel } from '../state.js';
-import { getTexture, isBlocked, isInteractive, isSolid } from '../utils/cell-utils.js';
+import { isBlocked, isInteractive, isSolid } from '../utils/cell-utils.js';
 import { getCell } from '../utils/level-utils.js';
 import { backBufferProps } from '../config.js';
-import { isTextureStateful } from '../utils/texture-utils.js';
+import { CastResult } from '../interfaces/raycaster';
+
+// FIXME: Slimmed down copy of the raycast function from raycaster.ts, should merge
+function castRay(column: number, entity: Entity, level: Level, maxDepth: number = 50): CastResult | undefined {
+  const camera = (2 * column) / backBufferProps.width - 1;
+  const rayDirectionX = entity.dx + entity.cx * camera;
+  const rayDirectionY = entity.dy + entity.cy * camera;
+
+  // Calculate the distance from one cell boundary to the next boundary in the X or Y direction.
+  const deltaDistanceX = Math.abs(1 / rayDirectionX);
+  const deltaDistanceY = Math.abs(1 / rayDirectionY);
+
+  // Tracks the current Cell as the line is cast.
+  const castCell: Point = { x: Math.floor(entity.x), y: Math.floor(entity.y) };
+
+  // Tracks the total distance from the ray's origin as the line is cast.
+  const castDistance: Point = { x: 0, y: 0 };
+
+  // Counts the steps along each axis as the line is cast.
+  const castStep: Point = { x: 0, y: 0 };
+
+  // Step to the next Cell on the X Axis.
+  if (rayDirectionX < 0) {
+    castStep.x = -1;
+    castDistance.x = (entity.x - castCell.x) * deltaDistanceX;
+  } else {
+    castStep.x = 1;
+    castDistance.x = (castCell.x + 1 - entity.x) * deltaDistanceX;
+  }
+
+  // Step to the next Cell on the Y Axis.
+  if (rayDirectionY < 0) {
+    castStep.y = -1;
+    castDistance.y = (entity.y - castCell.y) * deltaDistanceY;
+  } else {
+    castStep.y = 1;
+    castDistance.y = (castCell.y + 1 - entity.y) * deltaDistanceY;
+  }
+
+  // Count the number of DDA steps executed, so that we can break if the maximum depth is reached.
+  let count = 0;
+
+  // Tracks if the DDA step was in the X or the Y axis.
+  let side;
+
+  // Use DDA to step through all the cell boundaries the ray touches.
+  while (count++ < maxDepth) {
+    // Advance along either the X or the Y axis to the next Cell boundary.
+    if (castDistance.x < castDistance.y) {
+      castDistance.x += deltaDistanceX;
+      castCell.x += castStep.x;
+      side = castStep.x < 0 ? Face.EAST : Face.WEST;
+    } else {
+      castDistance.y += deltaDistanceY;
+      castCell.y += castStep.y;
+      side = castStep.y > 0 ? Face.NORTH : Face.SOUTH;
+    }
+
+    // Get the Cell that the ray has hit.
+    const cell = getCell(level, castCell.x, castCell.y);
+
+    // If the cell is not valid, then most likely exceeded the boundaries of the level hence give up.
+    if (cell === undefined) {
+      break;
+    }
+
+    // Check if the Cell is Solid.
+    if (isInteractive(cell)) {
+      // Calculate the distance from the ray's origin to the solid that was hit, and the specific point on the wall the ray hit.
+      let distance = 0;
+      let wall = 0;
+      switch (side) {
+        case Face.EAST:
+        case Face.WEST:
+          distance = Math.abs((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX);
+          wall = entity.y + ((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX) * rayDirectionY;
+          wall -= Math.floor(wall);
+          break;
+
+        case Face.NORTH:
+        case Face.SOUTH:
+          distance = Math.abs((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY);
+          wall = entity.x + ((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY) * rayDirectionX;
+          wall -= Math.floor(wall);
+          break;
+      }
+
+      return {
+        ...castCell,
+        cell,
+        face: side,
+        wall,
+        distance: distance
+      };
+    }
+  }
+  return undefined;
+}
 
 export class Player implements Movable {
   x: number;
@@ -80,13 +178,12 @@ export class Player implements Movable {
     const result = castRay(backBufferProps.width / 2, this, level);
     if (result != undefined) {
       const cell = result.cell;
-      const texture = getTexture(result.cell, result.face);
       const reach = 1 + this.radius;
 
       // Check we can reach the target.
       if (result.distance < reach) {
         // Target cell can be interacted with, and the specific face is stateful...
-        if (isInteractive(cell) && isTextureStateful(texture)) {
+        if (isInteractive(cell)) {
           for (const activator of cell.activators) {
             activator(cell);
           }

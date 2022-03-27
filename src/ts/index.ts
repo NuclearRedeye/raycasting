@@ -6,6 +6,7 @@ import { getCurrentLevel, getGameState, getPlayer, setCurrentLevel, states } fro
 import { checkEntityCollision } from './utils/collision-utils.js';
 import { getLevelName } from './utils/level-utils.js';
 import { Rectangle } from './interfaces/rectangle.js';
+import { updateTimers } from './utils/timer-utils.js';
 
 // Globals
 let backBufferCanvas: HTMLCanvasElement;
@@ -72,6 +73,8 @@ function onTick(timestamp: number): void {
     frontBuffer.fillStyle = 'black';
     frontBuffer.fillRect(0, 0, frontBufferCanvas.width, frontBufferCanvas.height);
 
+    const delta = getDelta();
+
     switch (getGameState()) {
       case states.LOADING:
         frontBuffer.fillStyle = 'black';
@@ -84,7 +87,8 @@ function onTick(timestamp: number): void {
         break;
 
       case states.LOADED:
-        update(getDelta());
+        updateTimers(delta);
+        update(delta);
         render(backBuffer, getPlayer(), getCurrentLevel());
         frontBuffer.drawImage(backBufferCanvas, 0, 0, backBufferProps.width, backBufferProps.height, frontBufferProps.x, frontBufferProps.y, frontBufferProps.width, frontBufferProps.height);
         frontBuffer.font = '24px serif';

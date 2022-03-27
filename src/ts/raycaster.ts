@@ -8,7 +8,7 @@ import { Point } from './interfaces/point';
 import { Face } from './enums.js';
 import { backBufferProps } from './config.js';
 import { drawGradient, drawTexture, drawTint } from './utils/canvas-utils.js';
-import { getTexture, isSolid } from './utils/cell-utils.js';
+import { getTexture, isSolid, isThin } from './utils/cell-utils.js';
 import { getCell } from './utils/level-utils.js';
 import { getAnimationFrame } from './utils/time-utils.js';
 import { applyEffectTint, getTextureById, isTextureAnimated, isTextureStateful } from './utils/texture-utils.js';
@@ -35,7 +35,7 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
   // Tracks the current Cell as the line is cast.
   const castCell: Point = { x: Math.floor(entity.x), y: Math.floor(entity.y) };
 
-  // Tracks the distance from the origin as the line is cast.
+  // Tracks the total distance from the ray's origin as the line is cast.
   const castDistance: Point = { x: 0, y: 0 };
 
   // Counts the steps along each axis as the line is cast.
@@ -94,12 +94,24 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
       switch (side) {
         case Face.EAST:
         case Face.WEST:
+          if (isThin(cell)) {
+            if (castDistance.x - deltaDistanceX * 0.5 > castDistance.y) {
+              continue;
+            }
+            castCell.x += castStep.x * 0.5;
+          }
           distance = Math.abs((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX);
           wall = entity.y + ((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX) * rayDirectionY;
           break;
 
         case Face.NORTH:
         case Face.SOUTH:
+          if (isThin(cell)) {
+            if (castDistance.y - deltaDistanceY * 0.5 > castDistance.x) {
+              continue;
+            }
+            castCell.y += castStep.y * 0.5;
+          }
           distance = Math.abs((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY);
           wall = entity.x + ((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY) * rayDirectionX;
           break;

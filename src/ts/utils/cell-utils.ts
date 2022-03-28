@@ -1,14 +1,17 @@
 import { Activator } from '../interfaces/activator';
-import { Cell } from '../interfaces/cell';
+import { Cell, DoorCell } from '../interfaces/cell';
 
-import { CellProperties, CellType, Face } from '../enums.js';
+import { CellProperties, CellType, DoorState, Face } from '../enums.js';
 import { getTextureById } from './texture-utils.js';
 import { Texture } from '../interfaces/texture.js';
-import { activatorIncrement, activatorToggle } from './activator-utils.js';
+import { activatorIncrement, activatorToggle, activatorDoor } from './activator-utils.js';
+
+let id = 0;
 
 // Generic function to create a Cell.
 function createCell(type: CellType, textureIds: number[], properties: number = 0): Cell {
   return {
+    id: `cell-${id++}`,
     type,
     textureIds,
     properties,
@@ -24,17 +27,35 @@ function cellHasProperty(cell: Cell, property: CellProperties): number {
 
 // Utility function to determine if the specified cell is solid.
 export function isSolid(cell: Cell): number {
-  return cellHasProperty(cell, CellProperties.SOLID);
+  let retVal = cellHasProperty(cell, CellProperties.SOLID);
+  if (isDoor(cell) && (cell as DoorCell).status === DoorState.OPEN) {
+    retVal = 0;
+  }
+  return retVal;
 }
 
 // Utility function to determine if the specified cell is blocked.
 export function isBlocked(cell: Cell): number {
-  return cellHasProperty(cell, CellProperties.BLOCKED);
+  let retVal = cellHasProperty(cell, CellProperties.BLOCKED);
+  if (isDoor(cell) && (cell as DoorCell).status === DoorState.OPEN) {
+    retVal = 0;
+  }
+  return retVal;
 }
 
 // Utility function to determine if the specified cell is solid.
 export function isInteractive(cell: Cell): number {
   return cellHasProperty(cell, CellProperties.INTERACTIVE);
+}
+
+// Utility function to determine if the specified cell is thin.
+export function isThin(cell: Cell): number {
+  return cellHasProperty(cell, CellProperties.THIN);
+}
+
+// Utility function to determine if the specified cell is thin.
+export function isDoor(cell: Cell): boolean {
+  return cell.type === CellType.DOOR;
 }
 
 // Utility function to get the texture ID for the specific face in the specified cell.
@@ -63,6 +84,26 @@ export function createSimpleWall(textureId: number): Cell {
 export function createInvisibleWall(textureId: number): Cell {
   const textureIds = new Array(6).fill(textureId);
   return createCell(CellType.FLOOR, textureIds, CellProperties.BLOCKED);
+}
+
+// Utility function to create a Thin Wall.
+export function createThinWall(textureId: number): Cell {
+  const textureIds = new Array(6).fill(textureId);
+  return createCell(CellType.WALL, textureIds, CellProperties.SOLID | CellProperties.THIN);
+}
+
+// Utility function to create a Door.
+export function createDoor(textureId: number, speed: number = 800): DoorCell {
+  const textureIds = new Array(6).fill(textureId);
+  const door = {
+    ...createCell(CellType.DOOR, textureIds, CellProperties.SOLID | CellProperties.THIN | CellProperties.INTERACTIVE),
+    status: DoorState.CLOSED,
+    percent: 100,
+    speed
+  };
+  door.activators.push(activatorDoor);
+  door.activators.push(activatorToggle);
+  return door;
 }
 
 // Utility function to create an ENTRANCE Cell.

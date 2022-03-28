@@ -3,11 +3,13 @@ import { Sprite } from './interfaces/sprite';
 import { Level } from './interfaces/level';
 import { Rectangle } from './interfaces/rectangle';
 import { CastResult } from './interfaces/raycaster';
+import { Point } from './interfaces/point';
+import { DoorCell } from './interfaces/cell';
 
 import { Face } from './enums.js';
 import { backBufferProps } from './config.js';
 import { drawGradient, drawTexture, drawTint } from './utils/canvas-utils.js';
-import { getTexture, isSolid } from './utils/cell-utils.js';
+import { getTexture, isDoor, isSolid, isThin } from './utils/cell-utils.js';
 import { getCell } from './utils/level-utils.js';
 import { getAnimationFrame } from './utils/time-utils.js';
 import { applyEffectTint, getTextureById, isTextureAnimated, isTextureStateful } from './utils/texture-utils.js';
@@ -27,38 +29,35 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
   const rayDirectionX = entity.dx + entity.cx * camera;
   const rayDirectionY = entity.dy + entity.cy * camera;
 
-  // Calculate the current Cell of the map that we are in.
-  let mapX = Math.floor(entity.x);
-  let mapY = Math.floor(entity.y);
-
-  // Flags to track if the next check should be in the X or Y direction when using DDA.
-  let stepX;
-  let stepY;
-
   // Calculate the distance from one cell boundary to the next boundary in the X or Y direction.
   const deltaDistanceX = Math.abs(1 / rayDirectionX);
   const deltaDistanceY = Math.abs(1 / rayDirectionY);
 
-  // Calculate the distance from the entity's origin to the first boundary in the X or Y direction.
-  let sideDistanceX;
-  let sideDistanceY;
+  // Tracks the current Cell as the line is cast.
+  const castCell: Point = { x: Math.floor(entity.x), y: Math.floor(entity.y) };
 
-  // Calculate the distance to the first side based on the ray's direction on the X Axis.
+  // Tracks the total distance from the ray's origin as the line is cast.
+  const castDistance: Point = { x: 0, y: 0 };
+
+  // Counts the steps along each axis as the line is cast.
+  const castStep: Point = { x: 0, y: 0 };
+
+  // Step to the next Cell on the X Axis.
   if (rayDirectionX < 0) {
-    stepX = -1;
-    sideDistanceX = (entity.x - mapX) * deltaDistanceX;
+    castStep.x = -1;
+    castDistance.x = (entity.x - castCell.x) * deltaDistanceX;
   } else {
-    stepX = 1;
-    sideDistanceX = (mapX + 1 - entity.x) * deltaDistanceX;
+    castStep.x = 1;
+    castDistance.x = (castCell.x + 1 - entity.x) * deltaDistanceX;
   }
 
-  // Calculate the distance to the first side based on the ray's direction on the Y Axis.
+  // Step to the next Cell on the Y Axis.
   if (rayDirectionY < 0) {
-    stepY = -1;
-    sideDistanceY = (entity.y - mapY) * deltaDistanceY;
+    castStep.y = -1;
+    castDistance.y = (entity.y - castCell.y) * deltaDistanceY;
   } else {
-    stepY = 1;
-    sideDistanceY = (mapY + 1 - entity.y) * deltaDistanceY;
+    castStep.y = 1;
+    castDistance.y = (castCell.y + 1 - entity.y) * deltaDistanceY;
   }
 
   // Count the number of DDA steps executed, so that we can break if the maximum depth is reached.
@@ -69,45 +68,96 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
 
   // Use DDA to step through all the cell boundaries the ray touches.
   while (count++ < maxDepth) {
-    // Step in either the X or the Y direction, moving the X and Y position to the next cell boundary.
-    if (sideDistanceX < sideDistanceY) {
-      sideDistanceX += deltaDistanceX;
-      mapX += stepX;
-      side = stepX < 0 ? Face.EAST : Face.WEST;
+    // Advance along either the X or the Y axis to the next Cell boundary.
+    if (castDistance.x < castDistance.y) {
+      castDistance.x += deltaDistanceX;
+      castCell.x += castStep.x;
+      side = castStep.x < 0 ? Face.EAST : Face.WEST;
     } else {
-      sideDistanceY += deltaDistanceY;
-      mapY += stepY;
-      side = stepY > 0 ? Face.NORTH : Face.SOUTH;
+      castDistance.y += deltaDistanceY;
+      castCell.y += castStep.y;
+      side = castStep.y > 0 ? Face.NORTH : Face.SOUTH;
     }
 
     // Get the Cell that the ray has hit.
-    const cell = getCell(level, mapX, mapY);
+    const cell = getCell(level, castCell.x, castCell.y);
 
-    // Check if the Cell is solid.
-    if (cell !== undefined && isSolid(cell)) {
+    // If the cell is not valid, then most likely exceeded the boundaries of the level hence give up.
+    if (cell === undefined) {
+      break;
+    }
+
+    // Check if the Cell is Solid.
+    if (isSolid(cell)) {
       // Calculate the distance from the ray's origin to the solid that was hit, and the specific point on the wall the ray hit.
       let distance = 0;
       let wall = 0;
       switch (side) {
         case Face.EAST:
         case Face.WEST:
-          distance = Math.abs((mapX - entity.x + (1 - stepX) / 2) / rayDirectionX);
-          wall = entity.y + ((mapX - entity.x + (1 - stepX) / 2) / rayDirectionX) * rayDirectionY;
+          if (isThin(cell)) {
+            // Check if the ray hits the center line of the thin wall, if not then it will hit the adjacent cell hence continue.
+            if (castDistance.x - deltaDistanceX * 0.5 > castDistance.y) {
+              continue;
+            }
+
+            // FIXME: When updating this function to return a drawing list, this will need to be reversed before the loop continues.
+            castCell.x += castStep.x * 0.5;
+          }
+
+          distance = Math.abs((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX);
+          wall = entity.y + ((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX) * rayDirectionY;
+          wall -= Math.floor(wall);
+
+          // If the cell is a door, the account for the door opening or closing.
+          if (isDoor(cell)) {
+            // Calculate the percentage that the door is open.
+            const doorOpenPercent = 0.01 * (cell as DoorCell).percent;
+
+            // Check if the ray hits the door, and if not continue to cast.
+            if (wall > doorOpenPercent) {
+              castCell.x -= castStep.x * 0.5;
+              continue;
+            }
+
+            // Offset the texture for the door based on how open it is.
+            wall = doorOpenPercent - wall;
+          }
           break;
 
         case Face.NORTH:
         case Face.SOUTH:
-          distance = Math.abs((mapY - entity.y + (1 - stepY) / 2) / rayDirectionY);
-          wall = entity.x + ((mapY - entity.y + (1 - stepY) / 2) / rayDirectionY) * rayDirectionX;
+          if (isThin(cell)) {
+            // Check if the ray hits the center line of the thin wall, if not then it will hit the adjacent cell hence continue.
+            if (castDistance.y - deltaDistanceY * 0.5 > castDistance.x) {
+              continue;
+            }
+
+            // FIXME: When updating this function to return a drawing list, this will need to be reversed before the loop continues.
+            castCell.y += castStep.y * 0.5;
+          }
+          distance = Math.abs((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY);
+          wall = entity.x + ((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY) * rayDirectionX;
+          wall -= Math.floor(wall);
+
+          if (isDoor(cell)) {
+            // Calculate the percentage that the door is open.
+            const doorOpenPercent = 0.01 * (cell as DoorCell).percent;
+
+            // Check if the ray hits the door, and if not continue to cast.
+            if (wall > doorOpenPercent) {
+              castCell.y -= castStep.y * 0.5;
+              continue;
+            }
+
+            // Offset the texture for the door based on how open it is.
+            wall = doorOpenPercent - wall;
+          }
           break;
       }
 
-      // TODO: Why is this essential?
-      wall -= Math.floor(wall);
-
       return {
-        x: mapX,
-        y: mapY,
+        ...castCell,
         cell,
         face: side,
         wall,

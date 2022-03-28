@@ -6,6 +6,7 @@ import { getCurrentLevel, getGameState, getPlayer, setCurrentLevel, states } fro
 import { checkEntityCollision } from './utils/collision-utils.js';
 import { getLevelName } from './utils/level-utils.js';
 import { Rectangle } from './interfaces/rectangle.js';
+import { updateTimers } from './utils/timer-utils.js';
 
 // Globals
 let backBufferCanvas: HTMLCanvasElement;
@@ -33,7 +34,7 @@ const rotationSpeed = 1.0;
 const movementSpeed = 2.0;
 
 function update(elapsed: number): void {
-  // FIXME: There are better ways to do this.
+  // FIXME: Update this to register a timer
   interactCooldown -= Math.floor(elapsed);
   if (interactCooldown < 0) {
     interactCooldown = 0;
@@ -72,6 +73,8 @@ function onTick(timestamp: number): void {
     frontBuffer.fillStyle = 'black';
     frontBuffer.fillRect(0, 0, frontBufferCanvas.width, frontBufferCanvas.height);
 
+    const delta = getDelta();
+
     switch (getGameState()) {
       case states.LOADING:
         frontBuffer.fillStyle = 'black';
@@ -84,7 +87,8 @@ function onTick(timestamp: number): void {
         break;
 
       case states.LOADED:
-        update(getDelta());
+        updateTimers(delta);
+        update(delta);
         render(backBuffer, getPlayer(), getCurrentLevel());
         frontBuffer.drawImage(backBufferCanvas, 0, 0, backBufferProps.width, backBufferProps.height, frontBufferProps.x, frontBufferProps.y, frontBufferProps.width, frontBufferProps.height);
         frontBuffer.font = '24px serif';
@@ -141,7 +145,7 @@ window.onkeydown = (event: KeyboardEvent): void => {
 
 window.onkeyup = (event: KeyboardEvent): void => {
   switch (event.code) {
-    // Toogle pausing the mainloop
+    // Toggle pausing the main-loop
     case 'KeyP':
       pause = !pause;
       break;

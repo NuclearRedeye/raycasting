@@ -1,6 +1,7 @@
 export enum CellType {
   FLOOR,
   WALL,
+  DOOR,
   ENTRANCE,
   EXIT
 }
@@ -39,5 +40,13 @@ export enum CellProperties {
   NONE = 0,
   SOLID = 1,
   BLOCKED = 2,
-  INTERACTIVE = 4
+  INTERACTIVE = 4,
+  THIN = 8
+}
+
+export enum DoorState {
+  CLOSED,
+  CLOSING,
+  OPENING,
+  OPEN
 }

@@ -7,7 +7,6 @@ import { Point } from './interfaces/point';
 import { Cell, DoorCell } from './interfaces/cell';
 
 import { Face } from './enums.js';
-import { backBufferProps } from './config.js';
 import { drawGradient, drawTexture, drawTint } from './utils/canvas-utils.js';
 import { getTexture, isDoor, isSolid, isThin } from './utils/cell-utils.js';
 import { getCell } from './utils/level-utils.js';
@@ -16,15 +15,9 @@ import { applyEffectTint, getTextureById, isTextureAnimated, isTextureStateful }
 import { isSpriteAlignedBottom, isSpriteAlignedTop, isSpriteStatic, isSpriteTinted } from './utils/sprite-utils.js';
 import { radiansToDegrees } from './utils/math-utils.js';
 
-// FIXME: These should be in a config object or similar
-const width = backBufferProps.width; // The width, in pixels, of the screen.
-const height = backBufferProps.height; // The height, in pixels, of the screen.
-const halfHeight = height / 2; // Half the height of the screen, in pixels.
-const columns = width; // The number of columns in the viewport, or basically the number or Rays to cast.
-
 // Derived from https://lodev.org/cgtutor/raycasting.html.
 // Casts a ray from the specified point at the specified angle and returns the first Wall the ray impacts.
-export function castRay(column: number, entity: Entity, level: Level, maxDepth: number = 50): CastResult | undefined {
+export function castRay(width: number, column: number, entity: Entity, level: Level, maxDepth: number = 50): CastResult | undefined {
   const camera = (2 * column) / width - 1;
   const rayDirectionX = entity.dx + entity.cx * camera;
   const rayDirectionY = entity.dy + entity.cy * camera;
@@ -170,9 +163,14 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
 
 // Draws the floor for the specified level, from the perspective of the specified Entity, onto the specified Canvas.
 export function renderFloor(context: CanvasRenderingContext2D, entity: Entity, level: Level): void {
+  // The width and height of the context.
+  const width = context.canvas.width;
+  const height = context.canvas.height;
+  const halfHeight = height / 2;
+
   // Create a temporary buffer for storing the floor data. This can then be copied to the framebuffer in a single draw operation.
   // FIXME: Avoid reallocating this buffer each frame, should cache it unless the width changes.
-  const floor: ImageData = context.createImageData(width, halfHeight);
+  const floor: ImageData = context.createImageData(width, height / 2);
 
   // Calculate the X and Y positions for the leftmost ray, where x = 0, and the rightmost ray, where x = width.
   const rayDirX0 = entity.dx - entity.cx;
@@ -247,7 +245,7 @@ export function renderFloor(context: CanvasRenderingContext2D, entity: Entity, l
         a: buffer[sourceOffset + 3]
       };
 
-      // Write that RGBA data into the correct location in the temporary floor data buffer.
+      // Write that RGBA data into the correct location in the temporary buffer.
       const offset = 4 * (Math.floor(x) + Math.floor(y) * width);
       floor.data[offset] = pixel.r;
       floor.data[offset + 1] = pixel.g;
@@ -256,15 +254,19 @@ export function renderFloor(context: CanvasRenderingContext2D, entity: Entity, l
     }
   }
 
-  // Copy the data from the temporary floor data buffer to the framebuffer.
+  // Copy the data from the temporary buffer to the framebuffer.
   context.putImageData(floor, 0, halfHeight);
 
-  // FIXME: This is a lazy way to add some shading to the floor, would be better to do this when setting the pixel data in the buffer.
+  // TODO: It might be more performant to apply the tint when writing the RGB values to the temporary buffer.
   drawGradient(context, { x: 0, y: halfHeight - 1 }, { x: width, y: height }, 'rgba(0,0,0,180)', 'transparent');
 }
 
 // Function to render the specified sprite, from the perspective of the specified entity, to the specified canvas.
 export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, depthBuffer: number[], sprite: Sprite): void {
+  // The width and height of the context.
+  const width = context.canvas.width;
+  const height = context.canvas.height;
+
   // Get the texture for the sprite
   const texture = getTextureById(sprite.textureId);
 
@@ -407,7 +409,13 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
 
 // Function to render the specified level, from the perspective of the specified entity to the target canvas
 export function render(context: CanvasRenderingContext2D, entity: Entity, level: Level): void {
-  const depthBuffer = new Array(columns).fill(50);
+  // The width and height of the context.
+  const width = context.canvas.width;
+  const height = context.canvas.height;
+  const halfHeight = height / 2;
+
+  // FIXME: Shouldn't need to reallocate this every frame.
+  const depthBuffer = new Array(width).fill(50);
 
   // Draw the Ceiling
   if (level.ceiling === undefined) {
@@ -420,7 +428,7 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
   // Draw the Walls
   for (let column = 0; column < width; column++) {
     // Get the first solid cell this ray hits.
-    const result = castRay(column, entity, level);
+    const result = castRay(width, column, entity, level);
 
     // FIXME: Should draw something when no solid is found within the maximum range.
     if (result !== undefined) {

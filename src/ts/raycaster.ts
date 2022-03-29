@@ -254,8 +254,12 @@ export function renderFloorAndCeiling(context: CanvasRenderingContext2D, entity:
 
       if (ceilingTexture) {
         // Calculate the specific X and Y pixel of the texture coordinate for this pixel.
-        const tx = Math.floor(ceilingTexture.width * (rowX - cellX)) & (ceilingTexture.width - 1);
+        let tx = Math.floor(ceilingTexture.width * (rowX - cellX)) & (ceilingTexture.width - 1);
         const ty = Math.floor(ceilingTexture.height * (rowY - cellY)) & (ceilingTexture.height - 1);
+
+        // Flip the Ceiling on the X axis
+        // TODO: Add support for flipping textures on surfaces based on flags.
+        tx = ceilingTexture.width - 1 - tx;
 
         // If the texture is animated, then calculate the offset for the frame within the texture.
         let texXAnimationOffset = 0;

@@ -324,6 +324,11 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   const transformX = invDet * (entity.dy * spriteX - entity.dx * spriteY);
   const transformY = invDet * (-entity.cy * spriteX + entity.cx * spriteY);
 
+  // If the sprite is behind the player, no need to render it.
+  if (transformY <= 0) {
+    return;
+  }
+
   // The X position of the sprite
   const spriteScreenX = Math.floor((width / 2) * (1 + transformX / transformY));
 

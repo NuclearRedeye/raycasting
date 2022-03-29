@@ -4,7 +4,7 @@ import { Level } from './interfaces/level';
 import { Rectangle } from './interfaces/rectangle';
 import { CastResult } from './interfaces/raycaster';
 import { Point } from './interfaces/point';
-import { DoorCell } from './interfaces/cell';
+import { Cell, DoorCell } from './interfaces/cell';
 
 import { Face } from './enums.js';
 import { backBufferProps } from './config.js';
@@ -168,11 +168,10 @@ export function castRay(column: number, entity: Entity, level: Level, maxDepth: 
   return undefined;
 }
 
+// Draws the floor for the specified level, from the perspective of the specified Entity, onto the specified Canvas.
 export function renderFloor(context: CanvasRenderingContext2D, entity: Entity, level: Level): void {
-  // Draw the Floor
-
   // Create a temporary buffer for storing the floor data. This can then be copied to the framebuffer in a single draw operation.
-  // FIXME: Don't re-allocate this buffer each function call by making it global.
+  // FIXME: Avoid reallocating this buffer each frame, should cache it unless the width changes.
   const floor: ImageData = context.createImageData(width, halfHeight);
 
   // Calculate the X and Y positions for the leftmost ray, where x = 0, and the rightmost ray, where x = width.
@@ -232,8 +231,14 @@ export function renderFloor(context: CanvasRenderingContext2D, entity: Entity, l
         texXAnimationOffset = frame * texture.width;
       }
 
+      // If the texture is stateful, then calculate the Y offset for the frame within the texture.
+      let texYStateOffset = 0;
+      if (isTextureStateful(texture)) {
+        texYStateOffset = ((cell as Cell).state % texture.states) * (texture.height * texture.imageWidth);
+      }
+
       // Get the RGBA values for the specified pixel directly from the textures data buffer.
-      const sourceOffset = 4 * (texXAnimationOffset + tx + ty * texture.imageWidth);
+      const sourceOffset = 4 * (texYStateOffset + (texXAnimationOffset + tx + ty * texture.imageWidth));
       const buffer = texture.buffer as Uint8ClampedArray;
       const pixel = {
         r: buffer[sourceOffset],

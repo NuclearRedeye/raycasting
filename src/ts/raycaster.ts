@@ -261,6 +261,106 @@ export function renderFloor(context: CanvasRenderingContext2D, entity: Entity, l
   drawGradient(context, { x: 0, y: halfHeight - 1 }, { x: width, y: height }, 'rgba(0,0,0,180)', 'transparent');
 }
 
+// Draws the Ceiling for the specified level, from the perspective of the specified Entity, onto the specified Canvas.
+export function renderCeiling(context: CanvasRenderingContext2D, entity: Entity, level: Level): void {
+  // The width and height of the context.
+  const width = context.canvas.width;
+  const height = context.canvas.height;
+  const halfHeight = height / 2;
+
+  // Create a temporary buffer for storing the floor data. This can then be copied to the framebuffer in a single draw operation.
+  // FIXME: Avoid reallocating this buffer each frame, should cache it unless the width changes.
+  const floor: ImageData = context.createImageData(width, height / 2);
+
+  // Calculate the X and Y positions for the leftmost ray, where x = 0, and the rightmost ray, where x = width.
+  const rayDirX0 = entity.dx - entity.cx;
+  const rayDirY0 = entity.dy - entity.cy;
+  const rayDirX1 = entity.dx + entity.cx;
+  const rayDirY1 = entity.dy + entity.cy;
+
+  // For each row from the horizon to the bottom of the screen.
+  for (let y = 0; y < halfHeight; y++) {
+    // Calculate the distance from the camera to the floor for the current row.
+    const rowDistance = y > 0 ? halfHeight / y : halfHeight;
+
+    // Calculate the real world step vector we have to add for each x (parallel to camera plane)
+    // adding step by step avoids multiplications with a weight in the inner loop
+    const floorStepX = (rowDistance * (rayDirX1 - rayDirX0)) / width;
+    const floorStepY = (rowDistance * (rayDirY1 - rayDirY0)) / width;
+
+    // Calculate the X and Y coordinates of the leftmost column.
+    let floorX = entity.x + rowDistance * rayDirX0;
+    let floorY = entity.y + rowDistance * rayDirY0;
+
+    // For each pixel in the row.
+    for (let x = 0; x < width; x++) {
+      // Calculate the X and Y coordinates of the specific cell.
+      const cellX = Math.floor(floorX);
+      const cellY = Math.floor(floorY);
+
+      // Get the specific floor texture for the target cell.
+      let texture;
+      const cell = getCell(level, cellX, cellY);
+      if (cell !== undefined) {
+        texture = getTexture(cell, Face.TOP);
+      } else {
+        // If the cell is undefined, then it's outside of the range of the map hence fallback to the level's ceiling textureId if present.
+        if (level.ceiling !== undefined) {
+          texture = getTextureById(level.ceiling);
+        } else {
+          floorX += floorStepX;
+          floorY += floorStepY;
+          continue;
+        }
+      }
+
+      // Calculate the specific X and Y pixel of the texture coordinate for this pixel.
+      const tx = Math.floor(texture.width * (floorX - cellX)) & (texture.width - 1);
+      const ty = Math.floor(texture.height * (floorY - cellY)) & (texture.height - 1);
+
+      // Increment the X and Y coordinates ready for the next pixel.
+      floorX += floorStepX;
+      floorY += floorStepY;
+
+      // If the texture is animated, then calculate the offset for the frame within the texture.
+      let texXAnimationOffset = 0;
+      if (isTextureAnimated(texture)) {
+        const frame = getAnimationFrame();
+        texXAnimationOffset = frame * texture.width;
+      }
+
+      // If the texture is stateful, then calculate the Y offset for the frame within the texture.
+      let texYStateOffset = 0;
+      if (isTextureStateful(texture)) {
+        texYStateOffset = ((cell as Cell).state % texture.states) * (texture.height * texture.imageWidth);
+      }
+
+      // Get the RGBA values for the specified pixel directly from the textures data buffer.
+      const sourceOffset = 4 * (texYStateOffset + (texXAnimationOffset + tx + ty * texture.imageWidth));
+      const buffer = texture.buffer as Uint8ClampedArray;
+      const pixel = {
+        r: buffer[sourceOffset],
+        g: buffer[sourceOffset + 1],
+        b: buffer[sourceOffset + 2],
+        a: buffer[sourceOffset + 3]
+      };
+
+      // Write that RGBA data into the correct location in the temporary buffer.
+      const offset = 4 * (Math.floor(x) + Math.floor(halfHeight - 1 - y) * width);
+      floor.data[offset] = pixel.r;
+      floor.data[offset + 1] = pixel.g;
+      floor.data[offset + 2] = pixel.b;
+      floor.data[offset + 3] = pixel.a;
+    }
+  }
+
+  // Copy the data from the temporary buffer to the framebuffer.
+  context.putImageData(floor, 0, 0);
+
+  // TODO: It might be more performant to apply the tint when writing the RGB values to the temporary buffer.
+  drawGradient(context, { x: 0, y: 0 }, { x: width, y: halfHeight }, 'transparent', 'rgba(0,0,0,180)');
+}
+
 // Function to render the specified sprite, from the perspective of the specified entity, to the specified canvas.
 export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, depthBuffer: number[], sprite: Sprite): void {
   // The width and height of the context.
@@ -421,6 +521,9 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
   if (level.ceiling === undefined) {
     drawGradient(context, { x: 0, y: 0 }, { x: width, y: halfHeight }, 'grey', 'black');
   }
+
+  // Draw the Ceiling
+  renderCeiling(context, entity, level);
 
   // Draw the Floor
   renderFloor(context, entity, level);

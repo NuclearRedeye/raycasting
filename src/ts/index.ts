@@ -1,7 +1,7 @@
 import { Timer } from './interfaces/timer';
 
 import { Mark, getCurrentFramesPerSecond, getDelta, getElapsed } from './utils/time-utils.js';
-import { backBufferProps } from './config.js';
+import { backBufferProps, increaseBackBufferSize, decreaseBackBufferSize } from './config.js';
 import { levels } from './data/levels/levels.js';
 import { render } from './raycaster.js';
 import { getCurrentLevel, getGameState, getPlayer, setCurrentLevel, states } from './state.js';
@@ -138,6 +138,7 @@ window.onkeydown = (event: KeyboardEvent): void => {
       break;
 
     default:
+      console.log(`code = ${event.code}`);
       break;
   }
 };
@@ -174,14 +175,39 @@ window.onkeyup = (event: KeyboardEvent): void => {
       interact = false;
       break;
 
+    case 'Equal':
+      if (increaseBackBufferSize()) {
+        resizeBackbuffer();
+      }
+      break;
+
+    case 'Minus':
+      if (decreaseBackBufferSize()) {
+        resizeBackbuffer();
+      }
+      break;
+
     default:
       break;
   }
 };
 
-function onResize(): void {
+// Resizes the Back Buffer
+function resizeBackbuffer(): void {
+  backBufferCanvas.width = backBufferProps.width;
+  backBufferCanvas.height = backBufferProps.height;
+
+  // BUG: Resizing the buffer re-enables image smoothing for some reason, hence disable it again.
+  backBuffer.imageSmoothingEnabled = false;
+}
+
+// Resizes the Front Buffer
+function resizeFrontbuffer(): void {
   frontBufferCanvas.width = window.innerWidth;
   frontBufferCanvas.height = window.innerHeight;
+
+  // BUG: Resizing the buffer re-enables image smoothing for some reason, hence disable it again.
+  frontBuffer.imageSmoothingEnabled = false;
 
   const ratio = Math.min(frontBufferCanvas.width / backBufferProps.width, frontBufferCanvas.height / backBufferProps.height);
   const width = frontBufferCanvas.width - backBufferProps.width * ratio;
@@ -195,20 +221,18 @@ function onResize(): void {
   };
 }
 
-window.onresize = onResize;
+// When the window is resized, make sure the FrontBuffer is also resized.
+window.onresize = resizeFrontbuffer;
 
 window.onload = function (): void {
+  // TODO: Once support is more widespread, could investigate using an Offscreen Canvas for the backBuffer.
   backBufferCanvas = document.createElement('canvas') as HTMLCanvasElement;
-  backBufferCanvas.width = backBufferProps.width;
-  backBufferCanvas.height = backBufferProps.height;
   backBuffer = backBufferCanvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
-  backBuffer.imageSmoothingEnabled = false;
+  resizeBackbuffer();
 
   frontBufferCanvas = document.createElement('canvas') as HTMLCanvasElement;
   frontBuffer = frontBufferCanvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
-  frontBuffer.imageSmoothingEnabled = false;
-
-  onResize();
+  resizeFrontbuffer();
 
   document.body.appendChild(frontBufferCanvas);
   window.requestAnimationFrame(onTick);

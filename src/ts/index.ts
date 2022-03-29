@@ -1,3 +1,5 @@
+import { Timer } from './interfaces/timer';
+
 import { Mark, getCurrentFramesPerSecond, getDelta, getElapsed } from './utils/time-utils.js';
 import { backBufferProps } from './config.js';
 import { levels } from './data/levels/levels.js';
@@ -6,7 +8,7 @@ import { getCurrentLevel, getGameState, getPlayer, setCurrentLevel, states } fro
 import { checkEntityCollision } from './utils/collision-utils.js';
 import { getLevelName } from './utils/level-utils.js';
 import { Rectangle } from './interfaces/rectangle.js';
-import { updateTimers } from './utils/timer-utils.js';
+import { hasTimer, registerTimer, updateTimers } from './utils/timer-utils.js';
 
 // Globals
 let backBufferCanvas: HTMLCanvasElement;
@@ -24,30 +26,27 @@ let rotateLeft = false;
 let rotateRight = false;
 let moveForwards = false;
 let moveBackwards = false;
-
 let interact = false;
-let interactCooldown = 0;
-const interactPerSecond = 2;
 
 let score = 0;
 const rotationSpeed = 1.0;
 const movementSpeed = 2.0;
 
-function update(elapsed: number): void {
-  // FIXME: Update this to register a timer
-  interactCooldown -= Math.floor(elapsed);
-  if (interactCooldown < 0) {
-    interactCooldown = 0;
-  }
+function createThrottleTimer(wait: number): Timer {
+  return (delta: number) => {
+    return (wait -= delta) < 0;
+  };
+}
 
+function update(elapsed: number): void {
   const player = getPlayer();
   if (moveForwards) player.move(movementSpeed / elapsed, getCurrentLevel());
   if (moveBackwards) player.move(-(movementSpeed / 2) / elapsed, getCurrentLevel());
   if (rotateLeft) player.rotate(-rotationSpeed / elapsed);
   if (rotateRight) player.rotate(rotationSpeed / elapsed);
-  if (interact && interactCooldown === 0) {
+  if (interact && !hasTimer('interact')) {
     player.interact(getCurrentLevel());
-    interactCooldown = 1000 / interactPerSecond;
+    registerTimer('interact', createThrottleTimer(500));
   }
 
   // FIXME: Check Collisions, nothing moves at the moment so for now just player vs all objects...
@@ -173,7 +172,6 @@ window.onkeyup = (event: KeyboardEvent): void => {
 
     case 'Space':
       interact = false;
-      interactCooldown = 0;
       break;
 
     default:

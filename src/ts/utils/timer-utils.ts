@@ -16,6 +16,11 @@ export function deregisterTimer(id: string): void {
   }
 }
 
+// Returns true if a timer with the specified id exists.
+export function hasTimer(id: string): boolean {
+  return timers.has(id);
+}
+
 // Iterates over and updates all timers
 export function updateTimers(delta: number): void {
   for (const [id, timer] of timers) {

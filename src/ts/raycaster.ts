@@ -453,15 +453,9 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
   // The width and height of the context.
   const width = context.canvas.width;
   const height = context.canvas.height;
-  const halfHeight = height / 2;
 
   // FIXME: Shouldn't need to reallocate this every frame.
   const depthBuffer = new Array(width).fill(50);
-
-  // Draw the Ceiling
-  if (level.ceiling === undefined) {
-    drawGradient(context, { x: 0, y: 0 }, { x: width, y: halfHeight }, 'grey', 'black');
-  }
 
   // Draw the Floor and Ceiling
   renderFloorAndCeiling(context, entity, level);
@@ -477,10 +471,13 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
       depthBuffer[column] = result.distance;
 
       // Calculate the height the wall should be rendered at based on its distance from the entity.
-      const wallHeight = Math.abs(Math.floor(height / result.distance));
+      let wallHeight = Math.abs(Math.floor(height / result.distance));
+
+      // FIXME: Quick kludge to workaround the issue where from a certain distance the floor/ceiling is visible above/below a wall.
+      wallHeight += 2;
 
       // Calculate the position on the Y axis of the viewport to start drawing the wall from.
-      const wallY = -wallHeight / 2 + height / 2; // + 1; FIXME: Workaround issue where from a certain distance the floor is visible under a wall
+      const wallY = -wallHeight / 2 + height / 2;
 
       // Get the texture for the solid cell.
       const texture = getTexture(result.cell, result.face);

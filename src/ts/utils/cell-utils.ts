@@ -64,8 +64,13 @@ export function getTexture(cell: Cell, face: Face = Face.NORTH): Texture {
 }
 
 // Utility function to create a FLOOR Cell.
-export function createFloor(textureId: number): Cell {
+export function createSimpleFloor(textureId: number): Cell {
   const textureIds = new Array(6).fill(textureId);
+  return createCell(CellType.FLOOR, textureIds);
+}
+
+// Utility function to create a FLOOR Cell.
+export function createFloor(textureIds: number[]): Cell {
   return createCell(CellType.FLOOR, textureIds);
 }
 

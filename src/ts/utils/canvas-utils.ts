@@ -2,8 +2,6 @@ import { Point } from '../interfaces/point';
 import { Rectangle } from '../interfaces/rectangle';
 import { Texture } from '../interfaces/texture';
 
-import { backBufferProps } from '../config.js';
-
 // Draws a line of the specified colour on the target canvas.
 export function drawLine(context: CanvasRenderingContext2D, start: Point, end: Point, colour: string): void {
   context.strokeStyle = colour;
@@ -27,8 +25,7 @@ export function drawTint(context: CanvasRenderingContext2D, destination: Rectang
 
 // Draws a gradient of the specified colours on the target canvas.
 export function drawGradient(context: CanvasRenderingContext2D, start: Point, end: Point, startColour: string, endColour: string): void {
-  // FIXME: width should not be hardcoded here!
-  const x = backBufferProps.width / 2;
+  const x = context.canvas.width / 2;
   const gradient = context.createLinearGradient(x, start.y, x, end.y);
   gradient.addColorStop(0, startColour);
   gradient.addColorStop(1, endColour);
@@ -45,5 +42,5 @@ export function drawTexture(context: CanvasRenderingContext2D, canvas: HTMLCanva
 export function drawSkybox(context: CanvasRenderingContext2D, start: Point, end: Point, texturePositionX: number, texture: Texture): void {
   // FIXME: height should not be hardcoded here!
   const wallHeight = end.y - start.y;
-  context.drawImage(texture.canvas as HTMLCanvasElement, texturePositionX, 0, 1, (wallHeight / backBufferProps.height) * texture.height, start.x, start.y, 1, wallHeight);
+  context.drawImage(texture.canvas as HTMLCanvasElement, texturePositionX, 0, 1, (wallHeight / context.canvas.height) * texture.height, start.x, start.y, 1, wallHeight);
 }

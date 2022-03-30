@@ -325,7 +325,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   const transformX = invDet * (entity.dy * spriteX - entity.dx * spriteY);
   const transformY = invDet * (-entity.cy * spriteX + entity.cx * spriteY);
 
-  // FIXME: This prevents rendering sprites behind the player, but only works based on a 180 degree perspective. Should tune this to work based on field of view.
+  // If the sprite is behind the player, don't render it.
   if (transformY <= 0) {
     return;
   }
@@ -339,12 +339,37 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   // Calculate the width of the sprite.
   const spriteWidth = Math.abs(Math.floor(height / transformY));
 
+  // Calculate the destination rectangle for rendering the sprite.
   const destinationRectangle: Rectangle = {
     x: Math.floor(-spriteWidth / 2 + spriteScreenX),
     y: -spriteHeight / 2 + halfHeight,
     width: spriteWidth,
     height: spriteHeight
   };
+
+  // Only draw the sprite if it is onscreen
+  if (destinationRectangle.x + width < 0 || destinationRectangle.x >= width) {
+    return;
+  }
+
+  // Resize destination rectangle to cull obscured pixels.
+  let clipStartX = Math.max(destinationRectangle.x, 0);
+  let clipEndX = destinationRectangle.x + destinationRectangle.width;
+  for (let column = destinationRectangle.x; column <= destinationRectangle.x + destinationRectangle.width; column++) {
+    if (transformY > depthBuffer[column]) {
+      if (column - clipStartX <= 1) {
+        // Detect leftmost obstruction
+        clipStartX = column;
+      } else {
+        // Detect rightmost obstruction
+        clipEndX = column;
+        break;
+      }
+    }
+  }
+
+  destinationRectangle.x = clipStartX;
+  destinationRectangle.width = clipEndX - clipStartX;
 
   /*
   // Calculate where to start drawing the sprite on the Y Axis.

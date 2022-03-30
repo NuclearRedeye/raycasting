@@ -331,7 +331,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   }
 
   // The X position of the sprite
-  const spriteScreenX = Math.floor((width / 2) * (1 + transformX / transformY));
+  const spriteScreenX = Math.round((width / 2) * (1 + transformX / transformY));
 
   // Calculate the height of the sprite.
   const spriteHeight = Math.abs(Math.floor(height / transformY));
@@ -339,6 +339,14 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   // Calculate the width of the sprite.
   const spriteWidth = Math.abs(Math.floor(height / transformY));
 
+  const destinationRectangle: Rectangle = {
+    x: Math.floor(-spriteWidth / 2 + spriteScreenX),
+    y: -spriteHeight / 2 + halfHeight,
+    width: spriteWidth,
+    height: spriteHeight
+  };
+
+  /*
   // Calculate where to start drawing the sprite on the Y Axis.
   let drawStartY = -spriteHeight / 2 + halfHeight;
   if (drawStartY < 0) {
@@ -362,7 +370,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   if (drawEndX > width + spriteWidth) {
     drawEndX = width + spriteWidth;
   }
-
+  */
   // Calculate the Y offset within the texture to start drawing from.
   //const texStartYD = drawStartY * 256 - height * 128 + spriteHeight * 128;
   //const texStartY = Math.round((texStartYD * texture.height) / spriteHeight / 256);
@@ -372,12 +380,13 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   //const texEndY = Math.round((texEndYD * texture.height) / spriteHeight / 256);
 
   // Calculate the vertical offset which enables vertical alignment of the sprite to the floor or ceiling.
-  let drawStartYOffset = 0;
+  /*
   if (isSpriteAlignedTop(sprite)) {
-    drawStartYOffset = -Math.floor(256 / transformY) + Math.round(spriteHeight / 2);
+    drawEndY = drawStartY + spriteHeight;
   } else if (isSpriteAlignedBottom(sprite)) {
-    drawStartYOffset = Math.floor(256 / transformY) - Math.round(spriteHeight / 2);
+    drawStartY = drawEndY - spriteHeight;
   }
+  */
 
   // If the object is animated, then calculate the offset for the frame within the texture.
   let texXAnimationOffset = 0;
@@ -418,14 +427,6 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
     y: 0,
     width: texture.width,
     height: texture.height
-  };
-
-  // The location to render that texture to in the framebuffer.
-  const destinationRectangle: Rectangle = {
-    x: drawStartX,
-    y: drawStartY,
-    width: spriteWidth,
-    height: spriteHeight
   };
 
   let canvas = texture.canvas;

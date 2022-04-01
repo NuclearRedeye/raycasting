@@ -13,7 +13,7 @@ import {
   createThinWall as tw,
   createDoor as d
 } from '../../utils/cell-utils.js';
-import { createSpriteBasic as sb } from '../../utils/sprite-utils.js';
+import { createSpriteBasic as sb, createSpriteNoTint as sbnt } from '../../utils/sprite-utils.js';
 
 export const level00: Level = {
   depth: 0,
@@ -43,6 +43,6 @@ export const level00: Level = {
   ],
   objects: [],
   //sprites: [sb(4.5, 5.5, 11, 0.25, SpriteProperties.ALIGN_BOTTOM), sb(5.5, 5.5, 5, 1), sb(6.5, 5.5, 11, 0.25, SpriteProperties.ALIGN_BOTTOM | SpriteProperties.STATIC), sb(7.5, 5.5, 5, 0.25, SpriteProperties.ALIGN_TOP)],
-  sprites: [sb(5.5, 5.5, 5, 1)],
+  sprites: [sb(4.5, 5.5, 5, 1), sbnt(5.5, 5.5, 5, 1)],
   enemies: []
 };

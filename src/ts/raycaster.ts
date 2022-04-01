@@ -341,82 +341,16 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
 
   // Calculate the destination rectangle for rendering the sprite.
   const destinationRectangle: Rectangle = {
-    x: Math.round(-spriteWidth / 2 + spriteScreenX),
-    y: Math.round(-spriteHeight / 2 + halfHeight),
+    x: Math.floor(-spriteWidth / 2 + spriteScreenX),
+    y: -spriteHeight / 2 + halfHeight,
     width: spriteWidth,
     height: spriteHeight
   };
 
   // Only draw the sprite if it is onscreen
-  if (destinationRectangle.x + width < 0 || destinationRectangle.x >= width) {
+  if (destinationRectangle.x + destinationRectangle.width < 0 || destinationRectangle.x >= width) {
     return;
   }
-
-  // Resize destination rectangle to cull obscured pixels.
-  let clipStartX = Math.max(destinationRectangle.x, 0);
-  let clipEndX = destinationRectangle.x + destinationRectangle.width;
-  for (let column = destinationRectangle.x; column <= destinationRectangle.x + destinationRectangle.width; column++) {
-    if (transformY > depthBuffer[column]) {
-      if (column - clipStartX <= 1) {
-        // Detect leftmost obstruction
-        clipStartX = column;
-      } else {
-        // Detect rightmost obstruction
-        clipEndX = column;
-        break;
-      }
-    }
-  }
-
-  const TextureX = Math.round(texture.width * ((clipStartX - destinationRectangle.x) / destinationRectangle.width));
-
-  destinationRectangle.x = clipStartX;
-  destinationRectangle.width = clipEndX - clipStartX;
-
-  const TextureWidth = Math.round(texture.width * (destinationRectangle.width / spriteWidth));
-
-
-  /*
-  // Calculate where to start drawing the sprite on the Y Axis.
-  let drawStartY = -spriteHeight / 2 + halfHeight;
-  if (drawStartY < 0) {
-    drawStartY = 0;
-  }
-
-  // Calculate where to stop drawing the sprite on the Y Axis.
-  let drawEndY = spriteHeight / 2 + halfHeight;
-  if (drawEndY >= height) {
-    drawEndY = height - 1;
-  }
-
-  // Calculate where to start drawing the sprite on the X Axis. Aka the column of the screen to start at.
-  let drawStartX = Math.floor(-spriteWidth / 2 + spriteScreenX);
-  if (drawStartX < -spriteWidth) {
-    drawStartX = -spriteWidth;
-  }
-
-  // Calculate where to stop drawing the sprite on the X Axis. Aka the column of the screen to end at.
-  let drawEndX = drawStartX + spriteWidth;
-  if (drawEndX > width + spriteWidth) {
-    drawEndX = width + spriteWidth;
-  }
-  */
-  // Calculate the Y offset within the texture to start drawing from.
-  //const texStartYD = drawStartY * 256 - height * 128 + spriteHeight * 128;
-  //const texStartY = Math.round((texStartYD * texture.height) / spriteHeight / 256);
-
-  // Calculate the Y offset within the texture to stop drawing from.
-  //const texEndYD = (drawEndY - 1) * 256 - height * 128 + spriteHeight * 128;
-  //const texEndY = Math.round((texEndYD * texture.height) / spriteHeight / 256);
-
-  // Calculate the vertical offset which enables vertical alignment of the sprite to the floor or ceiling.
-  /*
-  if (isSpriteAlignedTop(sprite)) {
-    drawEndY = drawStartY + spriteHeight;
-  } else if (isSpriteAlignedBottom(sprite)) {
-    drawStartY = drawEndY - spriteHeight;
-  }
-  */
 
   // If the object is animated, then calculate the offset for the frame within the texture.
   let texXAnimationOffset = 0;
@@ -453,9 +387,9 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
 
   // The slice of the texture that we want to render to the framebuffer.
   const sourceRectangle: Rectangle = {
-    x: 0 + TextureX,
+    x: 0,
     y: 0,
-    width: TextureWidth,
+    width: texture.width,
     height: texture.height
   };
 
@@ -469,53 +403,6 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
 
   // Draw the sprite to the screen.
   drawTexture(context, canvas as HTMLCanvasElement, sourceRectangle, destinationRectangle);
-
-  /*
-  // Then, for each column draw a vertical strip of the sprite.
-  for (let column = drawStartX; column < drawEndX; column++) {
-    // Only draw the sprite if..
-    // - It's in front of camera.
-    // - It's not off the left edge of the viewport.
-    // - It's not off the right edge of the viewport.
-    // - It's not too far away or hidden behind another solid that has already been rendered.
-    if (transformY > 0 && column >= 0 && column < width && transformY < depthBuffer[column]) {
-      // Calculate the X offset within the texture to start drawing from.
-      let texX = Math.floor((256 * (column - (-spriteWidth / 2 + spriteScreenX)) * texture.width) / spriteWidth / 256);
-
-      // FIXME: This works around a rounding error that can occur above.
-      if (texX < 0) {
-        texX = 0;
-      }
-
-      // The slice of the texture that we want to render to the framebuffer.
-      const sourceRectangle: Rectangle = {
-        x: texX + texXAnimationOffset,
-        y: 0,
-        width: 1,
-        height: texture.height
-      };
-
-      // The location to render that texture to in the framebuffer.
-      const destinationRectangle: Rectangle = {
-        x: column,
-        y: drawStartY,
-        width: 1,
-        height: spriteHeight
-      };
-
-      let canvas = texture.canvas;
-
-      // Apply a darkened tint to the sprite, based on its distance from the entity.
-      if (isSpriteTinted(sprite)) {
-        canvas = texture.effect as HTMLCanvasElement;
-        sourceRectangle.x = texX;
-      }
-
-      // Draw the sprite to the screen.
-      drawTexture(context, canvas as HTMLCanvasElement, sourceRectangle, destinationRectangle);
-    }
-  }
-  */
 }
 
 // Function to render the specified level, from the perspective of the specified entity to the target canvas

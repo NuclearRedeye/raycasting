@@ -334,10 +334,10 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   const spriteScreenX = Math.round((width / 2) * (1 + transformX / transformY));
 
   // Calculate the height of the sprite.
-  const spriteHeight = Math.abs(Math.round(height / transformY));
+  const spriteHeight = Math.abs(Math.round(height / transformY) * sprite.scale);
 
   // Calculate the width of the sprite.
-  const spriteWidth = Math.abs(Math.round(height / transformY));
+  const spriteWidth = Math.abs(Math.round(height / transformY) * sprite.scale);
 
   // Calculate the destination rectangle for rendering the sprite.
   const destinationRectangle: Rectangle = {
@@ -350,6 +350,13 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   // Only draw the sprite if it is onscreen
   if (destinationRectangle.x + destinationRectangle.width < 0 || destinationRectangle.x >= width) {
     return;
+  }
+
+  // Update destination rectangle to correctly position the sprite.
+  if (isSpriteAlignedTop(sprite)) {
+    destinationRectangle.y = -Math.abs(Math.round(height / transformY)) / 2 + halfHeight;
+  } else if (isSpriteAlignedBottom(sprite)) {
+    destinationRectangle.y = Math.abs(Math.round(height / transformY)) / 2 + halfHeight - spriteHeight;
   }
 
   // If the object is animated, then calculate the offset for the frame within the texture.

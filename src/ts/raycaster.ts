@@ -334,15 +334,15 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   const spriteScreenX = Math.round((width / 2) * (1 + transformX / transformY));
 
   // Calculate the height of the sprite.
-  const spriteHeight = Math.abs(Math.floor(height / transformY));
+  const spriteHeight = Math.abs(Math.round(height / transformY));
 
   // Calculate the width of the sprite.
-  const spriteWidth = Math.abs(Math.floor(height / transformY));
+  const spriteWidth = Math.abs(Math.round(height / transformY));
 
   // Calculate the destination rectangle for rendering the sprite.
   const destinationRectangle: Rectangle = {
-    x: Math.floor(-spriteWidth / 2 + spriteScreenX),
-    y: -spriteHeight / 2 + halfHeight,
+    x: Math.round(-spriteWidth / 2 + spriteScreenX),
+    y: Math.round(-spriteHeight / 2 + halfHeight),
     width: spriteWidth,
     height: spriteHeight
   };
@@ -368,8 +368,13 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
     }
   }
 
+  const TextureX = Math.round(texture.width * ((clipStartX - destinationRectangle.x) / destinationRectangle.width));
+
   destinationRectangle.x = clipStartX;
   destinationRectangle.width = clipEndX - clipStartX;
+
+  const TextureWidth = Math.round(texture.width * (destinationRectangle.width / spriteWidth));
+
 
   /*
   // Calculate where to start drawing the sprite on the Y Axis.
@@ -448,9 +453,9 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
 
   // The slice of the texture that we want to render to the framebuffer.
   const sourceRectangle: Rectangle = {
-    x: 0,
+    x: 0 + TextureX,
     y: 0,
-    width: texture.width,
+    width: TextureWidth,
     height: texture.height
   };
 

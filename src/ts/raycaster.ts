@@ -387,7 +387,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
 
   // The slice of the texture that we want to render to the framebuffer.
   const sourceRectangle: Rectangle = {
-    x: 0,
+    x: 0 + texXAnimationOffset,
     y: 0,
     width: texture.width,
     height: texture.height
@@ -398,7 +398,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   // Apply a darkened tint to the sprite, based on its distance from the entity.
   if (isSpriteTinted(sprite)) {
     canvas = texture.effect as HTMLCanvasElement;
-    //sourceRectangle.x = texX;
+    sourceRectangle.x = 0;
   }
 
   // Draw the sprite to the screen.

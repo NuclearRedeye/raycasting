@@ -334,10 +334,14 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   const spriteScreenX = Math.round((width / 2) * (1 + transformX / transformY));
 
   // Calculate the height of the sprite.
-  const spriteHeight = Math.abs(Math.round(height / transformY) * sprite.scale);
+  let spriteHeight = Math.abs(Math.round(height / transformY) * sprite.scale);
 
   // Calculate the width of the sprite.
-  const spriteWidth = Math.abs(Math.round(height / transformY) * sprite.scale);
+  let spriteWidth = Math.abs(Math.round(height / transformY) * sprite.scale);
+
+  // FIXME: Quick kludge to workaround the issue where from a certain distance the floor/ceiling is visible above/below a wall.
+  spriteHeight += 2;
+  spriteWidth += 2;
 
   // Calculate the destination rectangle for rendering the sprite.
   const destinationRectangle: Rectangle = {

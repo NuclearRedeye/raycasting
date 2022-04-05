@@ -356,6 +356,32 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
     return;
   }
 
+  const clipRectangle: Rectangle = { ...destinationRectangle };
+
+  // Find the leftmost obstruction.
+  let leftMostFound = false;
+  for (let column = destinationRectangle.x; column < destinationRectangle.x + destinationRectangle.width; column++) {
+    if (transformY < depthBuffer[column]) {
+      clipRectangle.x = column;
+      clipRectangle.width = destinationRectangle.x + destinationRectangle.width - column;
+      leftMostFound = true;
+      break;
+    }
+  }
+
+  // The entire sprite is obscured by something else.
+  if (leftMostFound === false) {
+    return;
+  }
+
+  // Find the rightmost obstruction.
+  for (let column = destinationRectangle.x + destinationRectangle.width; column > clipRectangle.x; column--) {
+    if (transformY < depthBuffer[column]) {
+      clipRectangle.width = column - clipRectangle.x;
+      break;
+    }
+  }
+
   // Update destination rectangle to correctly position the sprite.
   if (isSpriteAlignedTop(sprite)) {
     destinationRectangle.y = -Math.abs(Math.round(height / transformY)) / 2 + halfHeight;
@@ -413,7 +439,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   }
 
   // Draw the sprite to the screen.
-  drawTexture(context, canvas as HTMLCanvasElement, sourceRectangle, destinationRectangle);
+  drawTexture(context, canvas as HTMLCanvasElement, sourceRectangle, clipRectangle);
 }
 
 // Function to render the specified level, from the perspective of the specified entity to the target canvas

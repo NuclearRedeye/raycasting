@@ -384,9 +384,9 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
 
   // Update destination rectangle to correctly position the sprite.
   if (isSpriteAlignedTop(sprite)) {
-    destinationRectangle.y = -Math.abs(Math.round(height / transformY)) / 2 + halfHeight;
+    clipRectangle.y = destinationRectangle.y = -Math.abs(Math.round(height / transformY)) / 2 + halfHeight;
   } else if (isSpriteAlignedBottom(sprite)) {
-    destinationRectangle.y = Math.abs(Math.round(height / transformY)) / 2 + halfHeight - spriteHeight;
+    clipRectangle.y = destinationRectangle.y = Math.abs(Math.round(height / transformY)) / 2 + halfHeight - spriteHeight;
   }
 
   // If the object is animated, then calculate the offset for the frame within the texture.

@@ -14,5 +14,6 @@ export const textures: Texture[] = [
   createTextureBasic(8, 'assets/debug.wall.south.png', 16, 16),
   createTextureBasic(9, 'assets/debug.wall.west.png', 16, 16),
   createTextureStateful(10, 'assets/debug.switch.cycle.png', 16, 16, 8),
-  createTextureAnimated(11, 'assets/object.coin.01.png', 16, 16, 8)
+  createTextureAnimated(11, 'assets/object.coin.01.png', 16, 16, 8),
+  createTextureBasic(12, 'assets/debug.sprite.01.png', 16, 16)
 ];

@@ -1,6 +1,6 @@
 
 PROJECT := $(notdir $(CURDIR))
-NODE_VERSION ?= fermium
+NODE_VERSION ?= hydrogen
 PORT ?= 8080
 
 # Build commands

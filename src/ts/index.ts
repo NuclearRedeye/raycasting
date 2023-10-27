@@ -29,8 +29,8 @@ let moveBackwards = false;
 let interact = false;
 
 let score = 0;
-const rotationSpeed = 1.0;
-const movementSpeed = 2.0;
+const rotationSpeed = 3.1; // Radians per second
+const movementSpeed = 2.5; // Cells per second
 
 function createThrottleTimer(wait: number): Timer {
   return (delta: number) => {
@@ -40,13 +40,14 @@ function createThrottleTimer(wait: number): Timer {
 
 function update(elapsed: number): void {
   const player = getPlayer();
-  if (moveForwards) player.move(movementSpeed / elapsed, getCurrentLevel());
-  if (moveBackwards) player.move(-(movementSpeed / 2) / elapsed, getCurrentLevel());
-  if (rotateLeft) player.rotate(-rotationSpeed / elapsed);
-  if (rotateRight) player.rotate(rotationSpeed / elapsed);
+  if (moveForwards) player.move(movementSpeed * elapsed, getCurrentLevel());
+  if (moveBackwards) player.move(-(movementSpeed / 2) * elapsed, getCurrentLevel());
+  if (rotateLeft) player.rotate(-rotationSpeed * elapsed);
+  if (rotateRight) player.rotate(rotationSpeed * elapsed);
+
   if (interact && !hasTimer('interact')) {
     player.interact(getCurrentLevel());
-    registerTimer('interact', createThrottleTimer(500));
+    registerTimer('interact', createThrottleTimer(0.25));
   }
 
   // FIXME: Check Collisions, nothing moves at the moment so for now just player vs all objects...
@@ -103,9 +104,9 @@ function onTick(timestamp: number): void {
       frontBuffer.fillStyle = 'white';
       frontBuffer.font = '12px serif';
       frontBuffer.textAlign = 'start';
-      frontBuffer.fillText(`Current FPS: ${getCurrentFramesPerSecond().toFixed(2)}`, frontBufferProps.x + 10, frontBufferProps.y + 10);
-      frontBuffer.fillText(`Previous FT: ${getDelta().toFixed(2)}`, frontBufferProps.x + 10, frontBufferProps.y + 30);
-      frontBuffer.fillText(`Runtime: ${getElapsed().toFixed(2)} seconds`, frontBufferProps.x + 10, frontBufferProps.y + 50);
+      frontBuffer.fillText(`Framerate: ${getCurrentFramesPerSecond().toFixed(2)} per second`, frontBufferProps.x + 10, frontBufferProps.y + 10);
+      frontBuffer.fillText(`Previous FT: ${getDelta().toFixed(4)} seconds`, frontBufferProps.x + 10, frontBufferProps.y + 30);
+      frontBuffer.fillText(`Runtime: ${getElapsed().toFixed(4)} seconds`, frontBufferProps.x + 10, frontBufferProps.y + 50);
       const player = getPlayer();
       frontBuffer.fillText(`Player Pos: (${player.x}, ${player.y})`, frontBufferProps.x + 10, frontBufferProps.y + 70);
       frontBuffer.fillText(`Player Dir: (${player.dx}, ${player.dy})`, frontBufferProps.x + 10, frontBufferProps.y + 90);

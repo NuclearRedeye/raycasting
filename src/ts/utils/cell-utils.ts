@@ -98,7 +98,7 @@ export function createThinWall(textureId: number): Cell {
 }
 
 // Utility function to create a Door.
-export function createDoor(textureId: number, speed: number = 800): DoorCell {
+export function createDoor(textureId: number, speed: number = 1): DoorCell {
   const textureIds = new Array(6).fill(textureId);
   const door = {
     ...createCell(CellType.DOOR, textureIds, CellProperties.SOLID | CellProperties.THIN | CellProperties.INTERACTIVE),

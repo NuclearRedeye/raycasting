@@ -13,5 +13,5 @@ export interface Cell {
 export interface DoorCell extends Cell {
   status: DoorState; // The doors current state, e.g. Opening, Closed, etc.
   percent: number; // The amount, in percent, the door is closed. 100 mean closed, 0 means open.
-  speed: number; // The time, in milliseconds, the door takes to open or close.
+  speed: number; // The time, in seconds, the door takes to open or close.
 }

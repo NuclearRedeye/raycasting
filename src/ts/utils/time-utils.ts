@@ -16,11 +16,11 @@ export function Mark(timestamp: number): void {
 }
 
 export function getElapsed(): number {
-  return current;
+  return current / 1000;
 }
 
 export function getDelta(): number {
-  return current - previous;
+  return (current - previous) / 1000;
 }
 
 export function getCurrentFramesPerSecond(): number {

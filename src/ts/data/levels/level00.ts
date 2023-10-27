@@ -37,7 +37,7 @@ export const level00: Level = {
     [i(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), i(2)],
     [sw(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sw(2)],
     [ssc(10), sf(2), sf(2), w([6, 7, 8, 9, 2, 2]), sf(2), sf(2), sf(2), w([2, 5, 2, 5, 2, 2]), sf(2), sw(2)],
-    [d(4, 10000), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), tw(2)],
+    [d(4, 10), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), tw(2)],
     [sw(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sw(2)],
     [sw(1), sw(1), sw(5), sw(1), sst(4), sw(2), tw(2), sw(2), sw(2), sw(2)]
   ],

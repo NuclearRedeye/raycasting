@@ -7,7 +7,7 @@ import { Point } from './interfaces/point';
 import { Cell, DoorCell } from './interfaces/cell';
 
 import { Face } from './enums.js';
-import { drawGradient, drawTexture, drawTint } from './utils/canvas-utils.js';
+import { drawBorderRectangle, drawGradient, drawTexture, drawTint } from './utils/canvas-utils.js';
 import { getTexture, isDoor, isSolid, isThin } from './utils/cell-utils.js';
 import { getCell } from './utils/level-utils.js';
 import { getAnimationFrame } from './utils/time-utils.js';
@@ -307,7 +307,7 @@ export function renderFloorAndCeiling(context: CanvasRenderingContext2D, entity:
 }
 
 // Function to render the specified sprite, from the perspective of the specified entity, to the specified canvas.
-export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, depthBuffer: number[], sprite: Sprite): void {
+export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, depthBuffer: number[], sprite: Sprite, debug = false): void {
   // The width and height of the context.
   const width = context.canvas.width;
   const height = context.canvas.height;
@@ -363,7 +363,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
 
   // Calculate the Y offset within the texture to stop drawing from.
   const texEndYD = (drawEndY - 1) * 256 - height * 128 + spriteHeight * 128;
-  const texEndY = Math.round((texEndYD * texture.height) / spriteHeight / 256);
+  const texEndY = Math.ceil((texEndYD * texture.height) / spriteHeight / 256);
 
   // Calculate the vertical offset which enables vertical alignment of the sprite to the floor or ceiling.
   let drawStartYOffset = 0;
@@ -404,6 +404,15 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   // Apply a darkened tint to the sprite, based on its distance from the entity.
   if (isSpriteTinted(sprite)) {
     applyEffectTint(texture, texXAnimationOffset, ((height / (sprite.distance || 0)) * 1.6) / height);
+  }
+
+  if (debug) {
+    drawBorderRectangle(context, {
+      x: drawStartX,
+      y: drawStartY + drawStartYOffset,
+      width: (drawEndX - drawStartX),
+      height:(drawEndY - drawStartY)
+    });
   }
 
   // Then, for each column draw a vertical strip of the sprite.
@@ -453,7 +462,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
 }
 
 // Function to render the specified level, from the perspective of the specified entity to the target canvas
-export function render(context: CanvasRenderingContext2D, entity: Entity, level: Level): void {
+export function render(context: CanvasRenderingContext2D, entity: Entity, level: Level, debug = false): void {
   // The width and height of the context.
   const width = context.canvas.width;
   const height = context.canvas.height;
@@ -554,6 +563,6 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
       continue;
     }
 
-    renderSprite(context, entity, depthBuffer, sprite);
+    renderSprite(context, entity, depthBuffer, sprite, debug);
   }
 }

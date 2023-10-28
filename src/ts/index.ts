@@ -90,7 +90,7 @@ function onTick(timestamp: number): void {
       case states.LOADED:
         updateTimers(delta);
         update(delta);
-        render(backBuffer, getPlayer(), getCurrentLevel());
+        render(backBuffer, getPlayer(), getCurrentLevel(), debug);
         frontBuffer.drawImage(backBufferCanvas, 0, 0, backBufferProps.width, backBufferProps.height, frontBufferProps.x, frontBufferProps.y, frontBufferProps.width, frontBufferProps.height);
         frontBuffer.font = '24px serif';
         frontBuffer.textBaseline = 'top';

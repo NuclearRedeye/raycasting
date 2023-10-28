@@ -1,4 +1,5 @@
 import { Timer } from './interfaces/timer';
+import { Point } from './interfaces/point';
 
 import { Mark, getCurrentFramesPerSecond, getDelta, getElapsed } from './utils/time-utils.js';
 import { backBufferProps, increaseBackBufferSize, decreaseBackBufferSize } from './config.js';
@@ -9,6 +10,7 @@ import { checkEntityCollision } from './utils/collision-utils.js';
 import { getLevelName } from './utils/level-utils.js';
 import { Rectangle } from './interfaces/rectangle.js';
 import { hasTimer, registerTimer, updateTimers } from './utils/timer-utils.js';
+
 
 // Globals
 let backBufferCanvas: HTMLCanvasElement;
@@ -101,15 +103,24 @@ function onTick(timestamp: number): void {
 
     // If 'debug' is enabled, print various stats.
     if (debug) {
+      const pos: Point = {
+        x: frontBufferProps.x + 10,
+        y: frontBufferProps.y + 10
+      };
       frontBuffer.fillStyle = 'white';
       frontBuffer.font = '12px serif';
       frontBuffer.textAlign = 'start';
-      frontBuffer.fillText(`Framerate: ${getCurrentFramesPerSecond().toFixed(2)} per second`, frontBufferProps.x + 10, frontBufferProps.y + 10);
-      frontBuffer.fillText(`Previous FT: ${getDelta().toFixed(4)} seconds`, frontBufferProps.x + 10, frontBufferProps.y + 30);
-      frontBuffer.fillText(`Runtime: ${getElapsed().toFixed(4)} seconds`, frontBufferProps.x + 10, frontBufferProps.y + 50);
+      frontBuffer.fillText(`Stats`, pos.x, pos.y);
+      frontBuffer.fillText(`- Framerate: ${getCurrentFramesPerSecond().toFixed(2)} per second`, pos.x, (pos.y += 10));
+      frontBuffer.fillText(`- Frametime: ${getDelta().toFixed(4)} seconds`, pos.x, (pos.y += 10));
+      frontBuffer.fillText(`- Runtime:   ${getElapsed().toFixed(4)} seconds`, pos.x, (pos.y += 10));
+      frontBuffer.fillText(`Renderer`, pos.x, (pos.y += 10));
+      frontBuffer.fillText(`- Back:  ${backBufferProps.width} x ${backBufferProps.height}`, pos.x, (pos.y += 10));
+      frontBuffer.fillText(`- Front: ${frontBufferProps.width} x ${frontBufferProps.height}`, pos.x, (pos.y += 10));
       const player = getPlayer();
-      frontBuffer.fillText(`Player Pos: (${player.x}, ${player.y})`, frontBufferProps.x + 10, frontBufferProps.y + 70);
-      frontBuffer.fillText(`Player Dir: (${player.dx}, ${player.dy})`, frontBufferProps.x + 10, frontBufferProps.y + 90);
+      frontBuffer.fillText(`Player`, pos.x, (pos.y += 10));
+      frontBuffer.fillText(`- Position:  (${player.x}, ${player.y})`, pos.x, (pos.y += 10));
+      frontBuffer.fillText(`- Direction: (${player.dx}, ${player.dy})`, pos.x, (pos.y += 10));
     }
   }
 

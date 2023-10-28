@@ -11,7 +11,6 @@ import { getLevelName } from './utils/level-utils.js';
 import { Rectangle } from './interfaces/rectangle.js';
 import { hasTimer, registerTimer, updateTimers } from './utils/timer-utils.js';
 
-
 // Globals
 let backBufferCanvas: HTMLCanvasElement;
 let backBuffer: CanvasRenderingContext2D;

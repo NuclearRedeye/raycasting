@@ -37,7 +37,7 @@ clean:
 node_modules: package.json
 	@echo "Installing dependencies..."
 	@$(DOCKER) node:$(NODE_VERSION) npm install
-	@touch node_modules
+	@-touch node_modules
 
 # Target to create the output directories.
 out/debug out/release:

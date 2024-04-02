@@ -423,7 +423,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   }
 
   const textureCroppedWidth = (clipRectangle.width / destinationRectangle.width) * texture.width;
-  const textureCroppedX = (clipRectangle.x > destinationRectangle.x) ? texture.width - textureCroppedWidth : 0;
+  const textureCroppedX = clipRectangle.x > destinationRectangle.x ? texture.width - textureCroppedWidth : 0;
 
   // The slice of the texture that we want to render to the framebuffer.
   const sourceRectangle: Rectangle = {
@@ -447,7 +447,7 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   // If 'debug' is on, draw some additional borders.
   if (debug) {
     drawBorderRectangle(context, destinationRectangle);
-    drawBorderRectangle(context, clipRectangle, "green");
+    drawBorderRectangle(context, clipRectangle, 'green');
   }
 }
 

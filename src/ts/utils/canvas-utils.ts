@@ -45,9 +45,9 @@ export function drawSkybox(context: CanvasRenderingContext2D, start: Point, end:
   context.drawImage(texture.canvas as HTMLCanvasElement, texturePositionX, 0, 1, (wallHeight / context.canvas.height) * texture.height, start.x, start.y, 1, wallHeight);
 }
 
-export function drawBorderRectangle(context: CanvasRenderingContext2D, destination: Rectangle) {
+export function drawBorderRectangle(context: CanvasRenderingContext2D, destination: Rectangle, colour: string = "white") {
   context.save();
-  context.strokeStyle = "white";
+  context.strokeStyle = colour;
   context.lineWidth = 1;
   context.strokeRect(destination.x, destination.y, destination.width, destination.height);
   context.restore();

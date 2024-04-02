@@ -5,7 +5,7 @@ import { Rectangle } from './interfaces/rectangle';
 const resolutions: Point[] = [
   { x: 160, y: 120 },
   { x: 320, y: 240 },
-  { x: 480, y: 460 },
+  { x: 480, y: 360 },
   { x: 640, y: 480 },
   { x: 800, y: 600 }
 ];

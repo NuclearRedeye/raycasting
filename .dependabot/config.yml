@@ -1,12 +1,14 @@
-version: 1
-update_configs:
-  - package_manager: "javascript"
+version: 2
+updates:
+  - package-ecosystem: "npm"
     directory: "/"
-    update_schedule: "live"
-    commit_message:
+    schedule:
+      interval: "weekly"
+    commit-message:
       prefix: "chore(deps)"
-  - package_manager: "docker"
+  - package-ecosystem: "docker"
     directory: "/"
-    update_schedule: "weekly"
-    commit_message:
+    schedule:
+      interval: "weekly"
+    commit-message:
       prefix: "chore(deps)"

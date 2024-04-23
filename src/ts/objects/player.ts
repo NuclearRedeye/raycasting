@@ -1,4 +1,4 @@
-import { Movable } from '../interfaces/movable';
+import { Dynamic } from '../interfaces/dynamic';
 import { Level } from '../interfaces/level';
 import { Point } from '../interfaces/point';
 import { Entity } from '../interfaces/entity';
@@ -108,7 +108,7 @@ function castRay(column: number, entity: Entity, level: Level, maxDepth: number 
   return undefined;
 }
 
-export class Player implements Movable {
+export class Player implements Dynamic {
   x: number;
   y: number;
   dx: number;

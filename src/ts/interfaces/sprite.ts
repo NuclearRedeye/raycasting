@@ -1,6 +1,6 @@
-export interface Sprite {
-  x: number;
-  y: number;
+import { Point } from "./point";
+
+export interface Sprite extends Point {
   active: boolean;
   scale: number;
   textureId: number;

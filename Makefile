@@ -1,6 +1,6 @@
 
 PROJECT := $(notdir $(CURDIR))
-NODE_VERSION ?= hydrogen
+NODE_VERSION ?= jod 
 PORT ?= 8080
 
 # Build commands

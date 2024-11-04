@@ -40,7 +40,7 @@ export function isSolid(cell: Cell): number {
 export function isBlocked(cell: Cell): number {
   let retVal = cellHasProperty(cell, CellProperties.BLOCKED);
 
-    // FIXME: This should be moved elsewhere as in specific walls of a 'Door' Cell could still be solid
+  // FIXME: This should be moved elsewhere as in specific walls of a 'Door' Cell could still be solid
   if (isDoor(cell) && (cell as DoorCell).status === DoorState.OPEN) {
     retVal = 0;
   }

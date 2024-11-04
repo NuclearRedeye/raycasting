@@ -28,6 +28,8 @@ function cellHasProperty(cell: Cell, property: CellProperties): number {
 // Utility function to determine if the specified cell is solid.
 export function isSolid(cell: Cell): number {
   let retVal = cellHasProperty(cell, CellProperties.SOLID);
+
+  // FIXME: This should be moved elsewhere as in specific walls of a 'Door' Cell could still be solid
   if (isDoor(cell) && (cell as DoorCell).status === DoorState.OPEN) {
     retVal = 0;
   }
@@ -37,6 +39,8 @@ export function isSolid(cell: Cell): number {
 // Utility function to determine if the specified cell is blocked.
 export function isBlocked(cell: Cell): number {
   let retVal = cellHasProperty(cell, CellProperties.BLOCKED);
+
+    // FIXME: This should be moved elsewhere as in specific walls of a 'Door' Cell could still be solid
   if (isDoor(cell) && (cell as DoorCell).status === DoorState.OPEN) {
     retVal = 0;
   }

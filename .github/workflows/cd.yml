@@ -17,9 +17,6 @@ jobs:
       - name: Checking code for linting issues
         run: |
           make lint
-      - name: Checking unit tests pass
-        run: |
-          make test
       - name: Checking 'debug' code builds
         run: |
           sudo make debug

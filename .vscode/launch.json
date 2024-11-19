@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "Debug",
-      "type": "chrome",
+      "type": "firefox",
       "request": "launch",
       "url": "http://localhost:8080",
       "webRoot": "${workspaceRoot}/out/debug",
@@ -11,7 +11,11 @@
         "hidden": false,
         "group": "",
         "order": 1
-      }
+      },
+      "pathMappings": [{
+        "url": "http://localhost:8080",
+        "path": "${workspaceFolder}"
+    }]
     }
   ]
 }

@@ -2,6 +2,8 @@ import { Dynamic } from '../interfaces/dynamic';
 import { Level } from '../interfaces/level';
 import { Point } from '../interfaces/point';
 import { Entity } from '../interfaces/entity';
+import { CastResult } from '../interfaces/raycaster';
+import { Vector } from '../interfaces/vector';
 
 import { CellType, Face } from '../enums.js';
 import { levels } from '../data/levels/levels.js';
@@ -9,7 +11,9 @@ import { setCurrentLevel } from '../state.js';
 import { isBlocked, isInteractive, isSolid } from '../utils/cell-utils.js';
 import { getCell } from '../utils/level-utils.js';
 import { backBufferProps } from '../config.js';
-import { CastResult } from '../interfaces/raycaster';
+import { radiansToDegrees } from '../utils/math-utils.js';
+import * as vu from '../utils/vector-utils.js';
+
 
 // FIXME: Slimmed down copy of the raycast function from raycaster.ts, should merge
 function castRay(column: number, entity: Entity, level: Level, maxDepth: number = 50): CastResult | undefined {
@@ -129,6 +133,33 @@ export class Player implements Dynamic {
     this.active = true;
     this.scale = 1.0;
     this.radius = 0.5;
+  }
+
+  getDirection(): Vector {
+    return {
+      x: this.dx,
+      y: this.dy
+    }
+  }
+
+  getCamera(): Vector {
+    return {
+      x: this.cx,
+      y: this.cy
+    }
+  }
+
+  getAngle(): number {
+    const radians = vu.angle(this.getDirection());
+    return radiansToDegrees(radians);
+  }
+
+  // Returns the Entities Field of View, in Radians
+  getFOV(): number {
+    const a: Vector = vu.normalise(vu.subtract(this.getDirection(), this.getCamera()));
+    const b: Vector = vu.normalise(vu.add(this.getDirection(), this.getCamera()));
+    const radians = vu.angle(a, b);
+    return radiansToDegrees(radians);
   }
 
   // eslint-disable-next-line

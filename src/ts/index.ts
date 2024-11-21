@@ -21,6 +21,7 @@ let frontBufferProps: Rectangle;
 // States
 let pause: boolean = false;
 let debug: boolean = false;
+let minimap: boolean = false;
 
 // TODO: Clean this up.
 let rotateLeft = false;
@@ -121,6 +122,78 @@ function onTick(timestamp: number): void {
       frontBuffer.fillText(`- Position:  (${player.x}, ${player.y})`, pos.x, (pos.y += 10));
       frontBuffer.fillText(`- Direction: (${player.dx}, ${player.dy})`, pos.x, (pos.y += 10));
     }
+
+
+    // If enabled, draw the minimap
+    if (minimap) {
+      const player = getPlayer();
+      frontBuffer.fillStyle = "green";
+      frontBuffer.fillRect(frontBufferProps.x + 10, frontBufferProps.y + 10, frontBufferProps.width * 0.2, frontBufferProps.height * 0.2);
+
+      // Draw the direction Vector
+      const directionStart = {
+        x: frontBufferProps.x + 10 + ((frontBufferProps.width * 0.2) / 2),
+        y: frontBufferProps.y + 10 + ((frontBufferProps.height * 0.2) / 2)
+      }
+
+      const directionEnd = {
+        x: directionStart.x + (player.dx * 20),
+        y: directionStart.y + (player.dy * 20)
+      }
+
+      frontBuffer.strokeStyle = 'yellow';
+      frontBuffer.beginPath();
+      frontBuffer.moveTo(directionStart.x, directionStart.y);
+      frontBuffer.lineTo(directionEnd.x, directionEnd.y);
+      frontBuffer.stroke();
+
+      // Draw the Camera Plane
+      const cameraStart = {
+        x: directionEnd.x - (player.cx * 20),
+        y: directionEnd.y - (player.cy * 20)
+      }
+
+      const cameraEnd = {
+        x: directionEnd.x + (player.cx * 20),
+        y: directionEnd.y + (player.cy * 20)
+      }
+
+      frontBuffer.strokeStyle = 'blue';
+      frontBuffer.beginPath();
+      frontBuffer.moveTo(cameraStart.x, cameraStart.y);
+      frontBuffer.lineTo(cameraEnd.x, cameraEnd.y);
+      frontBuffer.stroke();
+
+      // Draw the FOV
+      const fovStart = {
+        x: directionEnd.x - (player.cx * 20),
+        y: directionEnd.y - (player.cy * 20)
+      }
+
+      const fovEnd = {
+        x: directionEnd.x + (player.cx * 20),
+        y: directionEnd.y + (player.cy * 20)
+      }
+
+      frontBuffer.strokeStyle = 'red';
+      frontBuffer.beginPath();
+      frontBuffer.moveTo(directionStart.x, directionStart.y);
+      frontBuffer.lineTo(fovStart.x, fovStart.y);
+      frontBuffer.stroke();
+
+      frontBuffer.beginPath();
+      frontBuffer.moveTo(directionStart.x, directionStart.y);
+      frontBuffer.lineTo(fovEnd.x, fovEnd.y);
+      frontBuffer.stroke();
+
+      // Stats
+      frontBuffer.fillStyle = 'white';
+      frontBuffer.font = '12px serif';
+      frontBuffer.textAlign = 'start';
+      frontBuffer.fillText(`Angle: ${player.getAngle().toFixed(2)} Degrees`, 15, 15);
+      frontBuffer.fillText(`FOV: ${player.getFOV().toFixed(2)} Degrees`, 15, 30);
+    }
+
   }
 
   window.requestAnimationFrame(onTick);
@@ -155,10 +228,32 @@ window.onkeydown = (event: KeyboardEvent): void => {
 };
 
 window.onkeyup = (event: KeyboardEvent): void => {
+  const player = getPlayer();
   switch (event.code) {
     // Toggle pausing the main-loop
     case 'KeyP':
       pause = !pause;
+      break;
+
+    // Toggle debug on or off
+    case 'KeyM':
+      minimap = !minimap;
+      break;
+
+    // Increase FOV
+    case 'PageUp':
+      if (player) {
+        player.dx *= 1.1;
+        player.dy *= 1.1;
+      }
+      break;
+
+    // Decrease FOV
+    case 'PageDown':
+      if (player) {
+        player.dx *= 0.9;
+        player.dy *= 0.9;
+      }
       break;
 
     // Toggle debug on or off

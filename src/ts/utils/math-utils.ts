@@ -9,6 +9,8 @@ export function degreesToRadians(degrees: number): number {
 }
 
 // Converts a value from Radians to Degrees.
-export function radiansToDegrees(degrees: number): number {
-  return degrees * (180 / Math.PI);
+export function radiansToDegrees(radians: number): number {
+  let theta = radians * 180 / Math.PI;
+  if (theta < 0) theta += 360;
+  return theta;
 }

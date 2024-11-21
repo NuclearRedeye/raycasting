@@ -21,7 +21,7 @@ export const level00: Level = {
   entrance: {
     x: 5,
     y: 1,
-    angle: 90
+    angle: 0
   },
   exit: {
     x: 5,

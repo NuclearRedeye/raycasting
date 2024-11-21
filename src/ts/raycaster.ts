@@ -19,15 +19,15 @@ import { radiansToDegrees } from './utils/math-utils.js';
 // Casts a ray from the specified point at the specified angle and returns the first Wall the ray impacts.
 export function castRay(width: number, column: number, entity: Entity, level: Level, maxDepth: number = 50): CastResult | undefined {
   const camera = (2 * column) / width - 1;
-  const rayDirectionX = entity.dx + entity.cx * camera;
-  const rayDirectionY = entity.dy + entity.cy * camera;
+  const rayDirectionX = entity.direction.x + entity.camera.x * camera;
+  const rayDirectionY = entity.direction.y + entity.camera.y * camera;
 
   // Calculate the distance from one cell boundary to the next boundary in the X or Y direction.
   const deltaDistanceX = Math.abs(1 / rayDirectionX);
   const deltaDistanceY = Math.abs(1 / rayDirectionY);
 
   // Tracks the current Cell as the line is cast.
-  const castCell: Point = { x: Math.floor(entity.x), y: Math.floor(entity.y) };
+  const castCell: Point = { x: Math.floor(entity.position.x), y: Math.floor(entity.position.y) };
 
   // Tracks the total distance from the ray's origin as the line is cast.
   const castDistance: Point = { x: 0, y: 0 };
@@ -38,19 +38,19 @@ export function castRay(width: number, column: number, entity: Entity, level: Le
   // Step to the next Cell on the X Axis.
   if (rayDirectionX < 0) {
     castStep.x = -1;
-    castDistance.x = (entity.x - castCell.x) * deltaDistanceX;
+    castDistance.x = (entity.position.x - castCell.x) * deltaDistanceX;
   } else {
     castStep.x = 1;
-    castDistance.x = (castCell.x + 1 - entity.x) * deltaDistanceX;
+    castDistance.x = (castCell.x + 1 - entity.position.x) * deltaDistanceX;
   }
 
   // Step to the next Cell on the Y Axis.
   if (rayDirectionY < 0) {
     castStep.y = -1;
-    castDistance.y = (entity.y - castCell.y) * deltaDistanceY;
+    castDistance.y = (entity.position.y - castCell.y) * deltaDistanceY;
   } else {
     castStep.y = 1;
-    castDistance.y = (castCell.y + 1 - entity.y) * deltaDistanceY;
+    castDistance.y = (castCell.y + 1 - entity.position.y) * deltaDistanceY;
   }
 
   // Count the number of DDA steps executed, so that we can break if the maximum depth is reached.
@@ -98,8 +98,8 @@ export function castRay(width: number, column: number, entity: Entity, level: Le
             castCell.x += castStep.x * 0.5;
           }
 
-          distance = Math.abs((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX);
-          wall = entity.y + ((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX) * rayDirectionY;
+          distance = Math.abs((castCell.x - entity.position.x + (1 - castStep.x) / 2) / rayDirectionX);
+          wall = entity.position.y + ((castCell.x - entity.position.x + (1 - castStep.x) / 2) / rayDirectionX) * rayDirectionY;
           wall -= Math.floor(wall);
 
           // If the cell is a door, the account for the door opening or closing.
@@ -129,8 +129,8 @@ export function castRay(width: number, column: number, entity: Entity, level: Le
             // FIXME: When updating this function to return a drawing list, this will need to be reversed before the loop continues.
             castCell.y += castStep.y * 0.5;
           }
-          distance = Math.abs((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY);
-          wall = entity.x + ((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY) * rayDirectionX;
+          distance = Math.abs((castCell.y - entity.position.y + (1 - castStep.y) / 2) / rayDirectionY);
+          wall = entity.position.x + ((castCell.y - entity.position.y + (1 - castStep.y) / 2) / rayDirectionY) * rayDirectionX;
           wall -= Math.floor(wall);
 
           if (isDoor(cell)) {
@@ -173,10 +173,10 @@ export function renderFloorAndCeiling(context: CanvasRenderingContext2D, entity:
   const buffer: ImageData = context.createImageData(width, height);
 
   // Calculate the X and Y positions for the leftmost ray, where x = 0, and the rightmost ray, where x = width.
-  const rayDirX0 = entity.dx - entity.cx;
-  const rayDirY0 = entity.dy - entity.cy;
-  const rayDirX1 = entity.dx + entity.cx;
-  const rayDirY1 = entity.dy + entity.cy;
+  const rayDirX0 = entity.direction.x - entity.camera.x;
+  const rayDirY0 = entity.direction.y - entity.camera.y;
+  const rayDirX1 = entity.direction.x + entity.camera.x;
+  const rayDirY1 = entity.direction.y + entity.camera.y;
 
   // For each row from the horizon to the bottom of the screen.
   for (let y = 0; y < halfHeight; y++) {
@@ -189,8 +189,8 @@ export function renderFloorAndCeiling(context: CanvasRenderingContext2D, entity:
     const stepY = (rowDistance * (rayDirY1 - rayDirY0)) / width;
 
     // Calculate the X and Y positions for the first pixel in the row.
-    let rowX = entity.x + rowDistance * rayDirX0;
-    let rowY = entity.y + rowDistance * rayDirY0;
+    let rowX = entity.position.x + rowDistance * rayDirX0;
+    let rowY = entity.position.y + rowDistance * rayDirY0;
 
     // For each pixel in the row.
     for (let x = 0; x < width; x++) {
@@ -317,13 +317,13 @@ export function renderSprite(context: CanvasRenderingContext2D, entity: Entity, 
   const texture = getTextureById(sprite.textureId);
 
   // Calculate the sprites position
-  const spriteX = sprite.x - entity.x;
-  const spriteY = sprite.y - entity.y;
+  const spriteX = sprite.position.x - entity.position.x;
+  const spriteY = sprite.position.y - entity.position.y;
 
   // Calculate some magic which I don't really understand myself, but it works.
-  const invDet = 1.0 / (entity.cx * entity.dy - entity.dx * entity.cy);
-  const transformX = invDet * (entity.dy * spriteX - entity.dx * spriteY);
-  const transformY = invDet * (-entity.cy * spriteX + entity.cx * spriteY);
+  const invDet = 1.0 / (entity.camera.x * entity.direction.y - entity.direction.x * entity.camera.y);
+  const transformX = invDet * (entity.direction.y * spriteX - entity.direction.x * spriteY);
+  const transformY = invDet * (-entity.camera.y * spriteX + entity.camera.x * spriteY);
 
   // If the sprite is behind the player, don't render it.
   if (transformY <= 0) {
@@ -534,7 +534,7 @@ export function render(context: CanvasRenderingContext2D, entity: Entity, level:
   // Prepare the sprites...
   const sprites: Sprite[] = [...level.sprites];
   for (const sprite of sprites) {
-    sprite.distance = Math.sqrt((entity.x - sprite.x) * (entity.x - sprite.x) + (entity.y - sprite.y) * (entity.y - sprite.y));
+    sprite.distance = Math.sqrt((entity.position.x - sprite.position.x) * (entity.position.x - sprite.position.x) + (entity.position.y - sprite.position.y) * (entity.position.y - sprite.position.y));
   }
 
   // Sort sprites from far to close

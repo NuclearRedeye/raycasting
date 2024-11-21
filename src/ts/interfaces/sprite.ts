@@ -1,6 +1,7 @@
 import { Point } from './point';
 
-export interface Sprite extends Point {
+export interface Sprite {
+  position: Point;
   active: boolean;
   scale: number;
   textureId: number;

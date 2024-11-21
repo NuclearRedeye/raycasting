@@ -1,3 +1,4 @@
+import { Radian } from '../types';
 import { Dynamic } from '../interfaces/dynamic';
 import { Level } from '../interfaces/level';
 import { Point } from '../interfaces/point';
@@ -18,15 +19,15 @@ import * as vu from '../utils/vector-utils.js';
 // FIXME: Slimmed down copy of the raycast function from raycaster.ts, should merge
 function castRay(column: number, entity: Entity, level: Level, maxDepth: number = 50): CastResult | undefined {
   const camera = (2 * column) / backBufferProps.width - 1;
-  const rayDirectionX = entity.dx + entity.cx * camera;
-  const rayDirectionY = entity.dy + entity.cy * camera;
+  const rayDirectionX = entity.direction.x + entity.camera.x * camera;
+  const rayDirectionY = entity.direction.y + entity.camera.y * camera;
 
   // Calculate the distance from one cell boundary to the next boundary in the X or Y direction.
   const deltaDistanceX = Math.abs(1 / rayDirectionX);
   const deltaDistanceY = Math.abs(1 / rayDirectionY);
 
   // Tracks the current Cell as the line is cast.
-  const castCell: Point = { x: Math.floor(entity.x), y: Math.floor(entity.y) };
+  const castCell: Point = { x: Math.floor(entity.position.x), y: Math.floor(entity.position.y) };
 
   // Tracks the total distance from the ray's origin as the line is cast.
   const castDistance: Point = { x: 0, y: 0 };
@@ -37,19 +38,19 @@ function castRay(column: number, entity: Entity, level: Level, maxDepth: number 
   // Step to the next Cell on the X Axis.
   if (rayDirectionX < 0) {
     castStep.x = -1;
-    castDistance.x = (entity.x - castCell.x) * deltaDistanceX;
+    castDistance.x = (entity.position.x - castCell.x) * deltaDistanceX;
   } else {
     castStep.x = 1;
-    castDistance.x = (castCell.x + 1 - entity.x) * deltaDistanceX;
+    castDistance.x = (castCell.x + 1 - entity.position.x) * deltaDistanceX;
   }
 
   // Step to the next Cell on the Y Axis.
   if (rayDirectionY < 0) {
     castStep.y = -1;
-    castDistance.y = (entity.y - castCell.y) * deltaDistanceY;
+    castDistance.y = (entity.position.y - castCell.y) * deltaDistanceY;
   } else {
     castStep.y = 1;
-    castDistance.y = (castCell.y + 1 - entity.y) * deltaDistanceY;
+    castDistance.y = (castCell.y + 1 - entity.position.y) * deltaDistanceY;
   }
 
   // Count the number of DDA steps executed, so that we can break if the maximum depth is reached.
@@ -87,15 +88,15 @@ function castRay(column: number, entity: Entity, level: Level, maxDepth: number 
       switch (side) {
         case Face.EAST:
         case Face.WEST:
-          distance = Math.abs((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX);
-          wall = entity.y + ((castCell.x - entity.x + (1 - castStep.x) / 2) / rayDirectionX) * rayDirectionY;
+          distance = Math.abs((castCell.x - entity.position.x + (1 - castStep.x) / 2) / rayDirectionX);
+          wall = entity.position.y + ((castCell.x - entity.position.x + (1 - castStep.x) / 2) / rayDirectionX) * rayDirectionY;
           wall -= Math.floor(wall);
           break;
 
         case Face.NORTH:
         case Face.SOUTH:
-          distance = Math.abs((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY);
-          wall = entity.x + ((castCell.y - entity.y + (1 - castStep.y) / 2) / rayDirectionY) * rayDirectionX;
+          distance = Math.abs((castCell.y - entity.position.y + (1 - castStep.y) / 2) / rayDirectionY);
+          wall = entity.position.x + ((castCell.y - entity.position.y + (1 - castStep.y) / 2) / rayDirectionY) * rayDirectionX;
           wall -= Math.floor(wall);
           break;
       }
@@ -113,51 +114,44 @@ function castRay(column: number, entity: Entity, level: Level, maxDepth: number 
 }
 
 export class Player implements Dynamic {
-  x: number;
-  y: number;
-  dx: number;
-  dy: number;
-  cx: number;
-  cy: number;
+  position: Point
+  direction: Vector
+  camera: Vector
+
   active: boolean;
   scale: number;
   radius: number;
 
   constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-    this.dx = 1.0;
-    this.dy = 0.0;
-    this.cx = 0.0;
-    this.cy = 0.66;
+    this.position = {
+      x,
+      y
+    };
+    
+    this.direction = {
+      x: 1.0,
+      y: 0.0
+    };
+
+    this.camera = {
+      x: 0.0,
+      y: 0.66
+    };
+
     this.active = true;
     this.scale = 1.0;
     this.radius = 0.5;
   }
 
-  getDirection(): Vector {
-    return {
-      x: this.dx,
-      y: this.dy
-    }
-  }
-
-  getCamera(): Vector {
-    return {
-      x: this.cx,
-      y: this.cy
-    }
-  }
-
   getAngle(): number {
-    const radians = vu.angle(this.getDirection());
+    const radians = vu.angle(this.direction);
     return radiansToDegrees(radians);
   }
 
   // Returns the Entities Field of View, in Radians
   getFOV(): number {
-    const a: Vector = vu.normalise(vu.subtract(this.getDirection(), this.getCamera()));
-    const b: Vector = vu.normalise(vu.add(this.getDirection(), this.getCamera()));
+    const a: Vector = vu.normalise(vu.subtract(this.direction, this.camera));
+    const b: Vector = vu.normalise(vu.add(this.direction, this.camera));
     const radians = vu.angle(a, b);
     return radiansToDegrees(radians);
   }
@@ -165,35 +159,27 @@ export class Player implements Dynamic {
   // eslint-disable-next-line
   update(elapsed: number): void {}
 
-  rotate(amount: number): void {
-    // Rotate Player
-    const dx = this.dx;
-    this.dx = this.dx * Math.cos(amount) - this.dy * Math.sin(amount);
-    this.dy = dx * Math.sin(amount) + this.dy * Math.cos(amount);
-
-    // Rotate Camera
-    const cx = this.cx;
-    this.cx = this.cx * Math.cos(amount) - this.cy * Math.sin(amount);
-    this.cy = cx * Math.sin(amount) + this.cy * Math.cos(amount);
+  rotate(amount: Radian): void {
+    this.direction = vu.rotate(this.direction, amount)
+    this.camera = vu.rotate(this.camera, amount)
   }
 
   move(amount: number, level: Level): void {
-    const newX = this.x + this.dx * amount;
-    const newY = this.y + this.dy * amount;
+    const position = vu.add(this.position, vu.scale(this.direction, amount))
 
     // Check for a collision on the X Axis
-    const xCell = getCell(level, Math.floor(newX), Math.floor(this.y));
+    const xCell = getCell(level, Math.floor(position.x), Math.floor(this.position.y));
     if (xCell !== undefined && !isSolid(xCell) && !isBlocked(xCell)) {
-      this.x = newX;
+      this.position.x = position.x;
     }
     // Check for a collision on the Y Axis
-    const yCell = getCell(level, Math.floor(this.x), Math.floor(newY));
+    const yCell = getCell(level, Math.floor(this.position.x), Math.floor(position.y));
     if (yCell !== undefined && !isSolid(yCell) && !isBlocked(yCell)) {
-      this.y = newY;
+      this.position.y = position.y;
     }
 
     // Check if we walked into a hole.
-    const newCell = getCell(level, Math.floor(this.x), Math.floor(this.y));
+    const newCell = getCell(level, Math.floor(this.position.x), Math.floor(this.position.y));
     if (newCell != undefined) {
       if (newCell.type === CellType.EXIT) {
         // FIXME: This is a temporary hack as this needs to be called outside of the animation loop.

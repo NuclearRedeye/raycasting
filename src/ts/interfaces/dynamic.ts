@@ -1,7 +1,8 @@
-import { Entity } from './entity';
-import { Level } from './level';
+import type { Radian } from '../types';
+import type { Entity } from './entity';
+import type { Level } from './level';
 
 export interface Dynamic extends Entity {
-  rotate(amount: number): void;
+  rotate(amount: Radian): void;
   move(amount: number, level: Level): void;
 }

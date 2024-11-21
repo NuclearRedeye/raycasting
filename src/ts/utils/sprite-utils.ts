@@ -4,8 +4,10 @@ import { SpriteProperties } from '../enums.js';
 
 function createSprite(x: number, y: number, textureId: number, scale: number, properties: number): Sprite {
   return {
-    x,
-    y,
+    position: {
+      x,
+      y
+    },
     active: true,
     textureId,
     scale,

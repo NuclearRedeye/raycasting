@@ -10,6 +10,7 @@ import { checkEntityCollision } from './utils/collision-utils.js';
 import { getLevelName } from './utils/level-utils.js';
 import { Rectangle } from './interfaces/rectangle.js';
 import { hasTimer, registerTimer, updateTimers } from './utils/timer-utils.js';
+import * as vu from './utils/vector-utils.js';
 
 // Globals
 let backBufferCanvas: HTMLCanvasElement;
@@ -119,8 +120,8 @@ function onTick(timestamp: number): void {
       frontBuffer.fillText(`- Front: ${frontBufferProps.width} x ${frontBufferProps.height}`, pos.x, (pos.y += 10));
       const player = getPlayer();
       frontBuffer.fillText(`Player`, pos.x, (pos.y += 10));
-      frontBuffer.fillText(`- Position:  (${player.x}, ${player.y})`, pos.x, (pos.y += 10));
-      frontBuffer.fillText(`- Direction: (${player.dx}, ${player.dy})`, pos.x, (pos.y += 10));
+      frontBuffer.fillText(`- Position:  (${player.position.x}, ${player.position.y})`, pos.x, (pos.y += 10));
+      frontBuffer.fillText(`- Direction: (${player.getAngle().toFixed(2)}`, pos.x, (pos.y += 10));
     }
 
 
@@ -136,10 +137,7 @@ function onTick(timestamp: number): void {
         y: frontBufferProps.y + 10 + ((frontBufferProps.height * 0.2) / 2)
       }
 
-      const directionEnd = {
-        x: directionStart.x + (player.dx * 20),
-        y: directionStart.y + (player.dy * 20)
-      }
+      const directionEnd = vu.add(directionStart, vu.scale(player.direction, 20));
 
       frontBuffer.strokeStyle = 'yellow';
       frontBuffer.beginPath();
@@ -148,15 +146,8 @@ function onTick(timestamp: number): void {
       frontBuffer.stroke();
 
       // Draw the Camera Plane
-      const cameraStart = {
-        x: directionEnd.x - (player.cx * 20),
-        y: directionEnd.y - (player.cy * 20)
-      }
-
-      const cameraEnd = {
-        x: directionEnd.x + (player.cx * 20),
-        y: directionEnd.y + (player.cy * 20)
-      }
+      const cameraStart = vu.subtract(directionEnd, vu.scale(player.camera, 20));
+      const cameraEnd = vu.add(directionEnd, vu.scale(player.camera, 20));
 
       frontBuffer.strokeStyle = 'blue';
       frontBuffer.beginPath();
@@ -165,15 +156,8 @@ function onTick(timestamp: number): void {
       frontBuffer.stroke();
 
       // Draw the FOV
-      const fovStart = {
-        x: directionEnd.x - (player.cx * 20),
-        y: directionEnd.y - (player.cy * 20)
-      }
-
-      const fovEnd = {
-        x: directionEnd.x + (player.cx * 20),
-        y: directionEnd.y + (player.cy * 20)
-      }
+      const fovStart = vu.subtract(directionEnd, vu.scale(player.camera, 20));
+      const fovEnd = vu.add(directionEnd, vu.scale(player.camera, 20));
 
       frontBuffer.strokeStyle = 'red';
       frontBuffer.beginPath();
@@ -243,16 +227,14 @@ window.onkeyup = (event: KeyboardEvent): void => {
     // Increase FOV
     case 'PageUp':
       if (player) {
-        player.dx *= 1.1;
-        player.dy *= 1.1;
+        player.direction = vu.scale(player.direction, 1.1);
       }
       break;
 
     // Decrease FOV
     case 'PageDown':
       if (player) {
-        player.dx *= 0.9;
-        player.dy *= 0.9;
+        player.direction = vu.scale(player.direction, 0.9);
       }
       break;
 

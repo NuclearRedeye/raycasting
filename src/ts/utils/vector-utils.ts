@@ -3,6 +3,8 @@ import { Vector } from "../interfaces/vector";
 export type Scaler = number;
 export type Radian = number;
 
+// See https://docs.godotengine.org/en/stable/tutorials/math/vector_math.html
+
 export function normalise(v: Vector): Vector {
   const magnitude = Math.sqrt((v.x * v.x) + (v.y * v.y));
   return {
@@ -25,7 +27,21 @@ export function subtract(a: Vector, b: Vector): Vector {
   };
 }
 
-export function rotate(v: Vector, radians: number): Vector {
+export function multiply(a: Vector, b: Vector): Vector {
+  return {
+    x: a.x * b.x,
+    y: a.y * b.y
+  }
+}
+
+export function scale(a: Vector, factor: number): Vector {
+  return {
+    x: a.x * factor,
+    y: a.y * factor
+  }
+}
+
+export function rotate(v: Vector, radians: Radian): Vector {
   return {
     x: v.x * Math.cos(radians) - v.y * Math.sin(radians),
     y: v.x * Math.sin(radians) + v.y * Math.cos(radians)

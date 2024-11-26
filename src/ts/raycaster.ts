@@ -20,12 +20,11 @@ import * as vu from './utils/vector-utils.js'
 // Casts a ray from the specified point at the specified angle and returns the first Wall the ray impacts.
 export function castRay(width: number, column: number, entity: Entity, level: Level, maxDepth: number = 50): CastResult | undefined {
   const camera = (2 * column) / width - 1;
-  const rayDirectionX = entity.direction.x + entity.camera.x * camera;
-  const rayDirectionY = entity.direction.y + entity.camera.y * camera;
+  const direction: Vector = vu.add(entity.direction, vu.scale(entity.camera, camera));
 
   // Calculate the distance from one cell boundary to the next boundary in the X or Y direction.
-  const deltaDistanceX = Math.abs(1 / rayDirectionX);
-  const deltaDistanceY = Math.abs(1 / rayDirectionY);
+  const deltaDistanceX = Math.abs(1 / direction.x);
+  const deltaDistanceY = Math.abs(1 / direction.y);
 
   // Tracks the current Cell as the line is cast.
   const castCell: Vector = vu.create(Math.floor(entity.position.x), Math.floor(entity.position.y));
@@ -37,7 +36,7 @@ export function castRay(width: number, column: number, entity: Entity, level: Le
   const castStep: Vector = vu.create();
 
   // Step to the next Cell on the X Axis.
-  if (rayDirectionX < 0) {
+  if (direction.x < 0) {
     castStep.x = -1;
     castDistance.x = (entity.position.x - castCell.x) * deltaDistanceX;
   } else {
@@ -46,7 +45,7 @@ export function castRay(width: number, column: number, entity: Entity, level: Le
   }
 
   // Step to the next Cell on the Y Axis.
-  if (rayDirectionY < 0) {
+  if (direction.y < 0) {
     castStep.y = -1;
     castDistance.y = (entity.position.y - castCell.y) * deltaDistanceY;
   } else {
@@ -99,8 +98,8 @@ export function castRay(width: number, column: number, entity: Entity, level: Le
             castCell.x += castStep.x * 0.5;
           }
 
-          distance = Math.abs((castCell.x - entity.position.x + (1 - castStep.x) / 2) / rayDirectionX);
-          wall = entity.position.y + ((castCell.x - entity.position.x + (1 - castStep.x) / 2) / rayDirectionX) * rayDirectionY;
+          distance = Math.abs((castCell.x - entity.position.x + (1 - castStep.x) / 2) / direction.x);
+          wall = entity.position.y + ((castCell.x - entity.position.x + (1 - castStep.x) / 2) / direction.x) * direction.y;
           wall -= Math.floor(wall);
 
           // If the cell is a door, the account for the door opening or closing.
@@ -130,8 +129,8 @@ export function castRay(width: number, column: number, entity: Entity, level: Le
             // FIXME: When updating this function to return a drawing list, this will need to be reversed before the loop continues.
             castCell.y += castStep.y * 0.5;
           }
-          distance = Math.abs((castCell.y - entity.position.y + (1 - castStep.y) / 2) / rayDirectionY);
-          wall = entity.position.x + ((castCell.y - entity.position.y + (1 - castStep.y) / 2) / rayDirectionY) * rayDirectionX;
+          distance = Math.abs((castCell.y - entity.position.y + (1 - castStep.y) / 2) / direction.y);
+          wall = entity.position.x + ((castCell.y - entity.position.y + (1 - castStep.y) / 2) / direction.y) * direction.x;
           wall -= Math.floor(wall);
 
           if (isDoor(cell)) {

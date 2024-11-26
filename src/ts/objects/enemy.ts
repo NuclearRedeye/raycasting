@@ -1,6 +1,5 @@
 import type { Radian } from '../types';
 import { Vector } from '../interfaces/vector';
-import { Point } from '../interfaces/point';
 import { Level } from '../interfaces/level';
 import { Dynamic } from '../interfaces/dynamic';
 
@@ -9,9 +8,8 @@ import { getCell } from '../utils/level-utils.js';
 import * as vu from '../utils/vector-utils.js'
 
 
-
 export class Enemy implements Dynamic {
-  position: Point;
+  position: Vector;
   direction: Vector;
   camera: Vector;
 

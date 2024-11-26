@@ -1,5 +1,5 @@
-import { Timer } from './interfaces/timer';
-import { Point } from './interfaces/point';
+import type { Timer } from './interfaces/timer';
+import type { Vector } from './interfaces/vector';
 
 import { Mark, getCurrentFramesPerSecond, getDelta, getElapsed } from './utils/time-utils.js';
 import { backBufferProps, increaseBackBufferSize, decreaseBackBufferSize } from './config.js';
@@ -104,10 +104,8 @@ function onTick(timestamp: number): void {
 
     // If 'debug' is enabled, print various stats.
     if (debug) {
-      const pos: Point = {
-        x: frontBufferProps.x + 10,
-        y: frontBufferProps.y + 10
-      };
+      const pos: Vector = vu.create(frontBufferProps.x + 10, frontBufferProps.y + 10);
+
       frontBuffer.fillStyle = 'white';
       frontBuffer.font = '12px serif';
       frontBuffer.textAlign = 'start';

@@ -1,6 +1,6 @@
-import { Point } from './point';
+import { Vector } from './vector';
 
-export interface Portal extends Point {
+export interface Portal extends Vector {
   angle: number;
   destination?: number;
 }

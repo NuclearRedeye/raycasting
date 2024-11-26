@@ -1,7 +1,6 @@
 import { Radian } from '../types';
 import { Dynamic } from '../interfaces/dynamic';
 import { Level } from '../interfaces/level';
-import { Point } from '../interfaces/point';
 import { Entity } from '../interfaces/entity';
 import { CastResult } from '../interfaces/raycaster';
 import { Vector } from '../interfaces/vector';
@@ -27,13 +26,13 @@ function castRay(column: number, entity: Entity, level: Level, maxDepth: number 
   const deltaDistanceY = Math.abs(1 / rayDirectionY);
 
   // Tracks the current Cell as the line is cast.
-  const castCell: Point = { x: Math.floor(entity.position.x), y: Math.floor(entity.position.y) };
+  const castCell: Vector = { x: Math.floor(entity.position.x), y: Math.floor(entity.position.y) };
 
   // Tracks the total distance from the ray's origin as the line is cast.
-  const castDistance: Point = { x: 0, y: 0 };
+  const castDistance: Vector = vu.create();
 
   // Counts the steps along each axis as the line is cast.
-  const castStep: Point = { x: 0, y: 0 };
+  const castStep: Vector = vu.create();
 
   // Step to the next Cell on the X Axis.
   if (rayDirectionX < 0) {
@@ -114,9 +113,9 @@ function castRay(column: number, entity: Entity, level: Level, maxDepth: number 
 }
 
 export class Player implements Dynamic {
-  position: Point
-  direction: Vector
-  camera: Vector
+  position: Vector;
+  direction: Vector;
+  camera: Vector;
 
   active: boolean;
   scale: number;

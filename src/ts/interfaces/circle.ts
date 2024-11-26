@@ -1,6 +1,6 @@
-import type { Point } from "./point";
+import type { Vector } from "./vector";
 
 export interface Circle {
-  position: Point;
+  position: Vector;
   radius: number;
 }

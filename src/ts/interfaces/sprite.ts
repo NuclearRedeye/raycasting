@@ -1,7 +1,7 @@
-import { Point } from './point';
+import { Vector } from './vector';
 
 export interface Sprite {
-  position: Point;
+  position: Vector;
   active: boolean;
   scale: number;
   textureId: number;

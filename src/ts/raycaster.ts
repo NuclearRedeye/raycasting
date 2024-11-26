@@ -1,10 +1,10 @@
-import { Entity } from './interfaces/entity';
-import { Sprite } from './interfaces/sprite';
-import { Level } from './interfaces/level';
-import { Rectangle } from './interfaces/rectangle';
-import { CastResult } from './interfaces/raycaster';
-import { Point } from './interfaces/point';
-import { Cell, DoorCell } from './interfaces/cell';
+import type { Entity } from './interfaces/entity';
+import type { Sprite } from './interfaces/sprite';
+import type { Level } from './interfaces/level';
+import type { Rectangle } from './interfaces/rectangle';
+import type { CastResult } from './interfaces/raycaster';
+import type { Vector } from './interfaces/vector';
+import type { Cell, DoorCell } from './interfaces/cell';
 
 import { Face } from './enums.js';
 import { drawBorderRectangle, drawGradient, drawTexture, drawTint } from './utils/canvas-utils.js';
@@ -14,6 +14,7 @@ import { getAnimationFrame } from './utils/time-utils.js';
 import { applyEffectTint, getTextureById, isTextureAnimated, isTextureStateful } from './utils/texture-utils.js';
 import { isSpriteAlignedBottom, isSpriteAlignedTop, isSpriteStatic, isSpriteTinted } from './utils/sprite-utils.js';
 import { radiansToDegrees } from './utils/math-utils.js';
+import * as vu from './utils/vector-utils.js'
 
 // Derived from https://lodev.org/cgtutor/raycasting.html.
 // Casts a ray from the specified point at the specified angle and returns the first Wall the ray impacts.
@@ -27,13 +28,13 @@ export function castRay(width: number, column: number, entity: Entity, level: Le
   const deltaDistanceY = Math.abs(1 / rayDirectionY);
 
   // Tracks the current Cell as the line is cast.
-  const castCell: Point = { x: Math.floor(entity.position.x), y: Math.floor(entity.position.y) };
+  const castCell: Vector = vu.create(Math.floor(entity.position.x), Math.floor(entity.position.y));
 
   // Tracks the total distance from the ray's origin as the line is cast.
-  const castDistance: Point = { x: 0, y: 0 };
+  const castDistance: Vector = vu.create();
 
   // Counts the steps along each axis as the line is cast.
-  const castStep: Point = { x: 0, y: 0 };
+  const castStep: Vector = vu.create();
 
   // Step to the next Cell on the X Axis.
   if (rayDirectionX < 0) {

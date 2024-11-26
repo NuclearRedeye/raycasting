@@ -5,6 +5,13 @@ export type Radian = number;
 
 // See https://docs.godotengine.org/en/stable/tutorials/math/vector_math.html
 
+export function create(x: number = 0, y: number = 0): Vector {
+  return {
+    x,
+    y
+  }
+}
+
 export function normalise(v: Vector): Vector {
   const magnitude = Math.sqrt((v.x * v.x) + (v.y * v.y));
   return {

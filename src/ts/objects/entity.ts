@@ -5,10 +5,10 @@ import type { Level } from '../interfaces/level';
 
 import * as vu from '../utils/vector-utils.js';
 import { radiansToDegrees } from '../utils/math-utils.js';
-import { isBlocked, isInteractive, isSolid } from '../utils/cell-utils.js';
+import { isBlocked, isSolid } from '../utils/cell-utils.js';
 import { getCell } from '../utils/level-utils.js';
 
-export class Entity implements Dynamic{
+export class Entity implements Dynamic {
   position: Vector;
   direction: Vector;
   camera: Vector;
@@ -44,12 +44,12 @@ export class Entity implements Dynamic{
   update(elapsed: number): void {}
 
   rotate(amount: Radian): void {
-    this.direction = vu.rotate(this.direction, amount)
-    this.camera = vu.rotate(this.camera, amount)
+    this.direction = vu.rotate(this.direction, amount);
+    this.camera = vu.rotate(this.camera, amount);
   }
 
   move(amount: number, level: Level): void {
-    const position = vu.add(this.position, vu.scale(this.direction, amount))
+    const position = vu.add(this.position, vu.scale(this.direction, amount));
 
     // Check for a collision on the X Axis
     const xCell = getCell(level, Math.floor(position.x), Math.floor(this.position.y));

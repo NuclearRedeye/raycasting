@@ -1,4 +1,4 @@
-import type { Vector } from "./vector";
+import type { Vector } from './vector';
 
 export interface Circle {
   position: Vector;

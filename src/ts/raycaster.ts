@@ -14,7 +14,7 @@ import { getAnimationFrame } from './utils/time-utils.js';
 import { applyEffectTint, getTextureById, isTextureAnimated, isTextureStateful } from './utils/texture-utils.js';
 import { isSpriteAlignedBottom, isSpriteAlignedTop, isSpriteStatic, isSpriteTinted } from './utils/sprite-utils.js';
 import { radiansToDegrees } from './utils/math-utils.js';
-import * as vu from './utils/vector-utils.js'
+import * as vu from './utils/vector-utils.js';
 
 // Derived from https://lodev.org/cgtutor/raycasting.html.
 // Casts a ray from the specified point at the specified angle and returns the first Wall the ray impacts.

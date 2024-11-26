@@ -125,14 +125,14 @@ function onTick(timestamp: number): void {
     // If enabled, draw the minimap
     if (minimap) {
       const player = getPlayer();
-      frontBuffer.fillStyle = "green";
+      frontBuffer.fillStyle = 'green';
       frontBuffer.fillRect(frontBufferProps.x + 10, frontBufferProps.y + 10, frontBufferProps.width * 0.2, frontBufferProps.height * 0.2);
 
       // Draw the direction Vector
       const directionStart = {
-        x: frontBufferProps.x + 10 + ((frontBufferProps.width * 0.2) / 2),
-        y: frontBufferProps.y + 10 + ((frontBufferProps.height * 0.2) / 2)
-      }
+        x: frontBufferProps.x + 10 + (frontBufferProps.width * 0.2) / 2,
+        y: frontBufferProps.y + 10 + (frontBufferProps.height * 0.2) / 2
+      };
 
       const directionEnd = vu.add(directionStart, vu.scale(player.direction, 20));
 
@@ -174,7 +174,6 @@ function onTick(timestamp: number): void {
       frontBuffer.fillText(`Angle: ${player.getAngle().toFixed(2)} Degrees`, 15, 15);
       frontBuffer.fillText(`FOV: ${player.getFOV().toFixed(2)} Degrees`, 15, 30);
     }
-
   }
 
   window.requestAnimationFrame(onTick);

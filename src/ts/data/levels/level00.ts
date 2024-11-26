@@ -41,7 +41,6 @@ export const level00: Level = {
     [sw(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sf(2), sw(2)],
     [sw(1), sw(1), sw(5), sw(1), sst(4), sw(2), tw(2), sw(2), sw(2), sw(2)]
   ],
-  objects: [],
+  entities: [],
   sprites: [sbnt(4.5, 5.5, 11, 0.25, SpriteProperties.ALIGN_BOTTOM), sb(5.5, 5.5, 5, 1), sb(6.5, 5.5, 11, 0.25, SpriteProperties.ALIGN_BOTTOM | SpriteProperties.STATIC), sb(7.5, 5.5, 5, 0.25, SpriteProperties.ALIGN_TOP)],
-  enemies: []
 };

@@ -1,6 +1,5 @@
 import { Portal } from './portal';
 import { Cell } from './cell';
-import { Enemy } from '../objects/enemy';
 import { Sprite } from './sprite';
 
 export interface Level {
@@ -9,9 +8,8 @@ export interface Level {
   entrance: Portal;
   exit: Portal;
   data: Cell[][];
-  objects: Sprite[];
+  entities: Sprite[];
   sprites: Sprite[];
-  enemies: Enemy[];
   floor?: number;
   loot?: number;
   ceiling?: number;

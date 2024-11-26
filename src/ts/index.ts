@@ -55,7 +55,7 @@ function update(elapsed: number): void {
 
   // FIXME: Check Collisions, nothing moves at the moment so for now just player vs all objects...
   const level = getCurrentLevel();
-  for (const object of level.objects) {
+  for (const object of level.entities) {
     if (object.active === false) {
       continue;
     }

@@ -122,7 +122,6 @@ function onTick(timestamp: number): void {
       frontBuffer.fillText(`- Direction: (${player.getAngle().toFixed(2)}`, pos.x, (pos.y += 10));
     }
 
-
     // If enabled, draw the minimap
     if (minimap) {
       const player = getPlayer();

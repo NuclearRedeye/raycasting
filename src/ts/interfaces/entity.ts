@@ -2,7 +2,6 @@ import type { Circle } from './circle';
 import type { Vector } from './vector';
 
 export interface Entity extends Circle {
-  position: Vector;
   direction: Vector;
   camera: Vector;
   active: boolean;

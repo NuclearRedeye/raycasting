@@ -1,31 +1,24 @@
-import { Radian } from '../types';
-import { Dynamic } from '../interfaces/dynamic';
 import { Level } from '../interfaces/level';
-import { Entity } from '../interfaces/entity';
 import { CastResult } from '../interfaces/raycaster';
 import { Vector } from '../interfaces/vector';
 
+import { Entity } from './entity.js';
 import { CellType, Face } from '../enums.js';
 import { levels } from '../data/levels/levels.js';
 import { setCurrentLevel } from '../state.js';
-import { isBlocked, isInteractive, isSolid } from '../utils/cell-utils.js';
+import { isInteractive } from '../utils/cell-utils.js';
 import { getCell } from '../utils/level-utils.js';
-import { backBufferProps } from '../config.js';
-import { radiansToDegrees } from '../utils/math-utils.js';
 import * as vu from '../utils/vector-utils.js';
 
-
 // FIXME: Slimmed down copy of the raycast function from raycaster.ts, should merge
-function castRay(column: number, entity: Entity, level: Level, maxDepth: number = 50): CastResult | undefined {
-  const camera = (2 * column) / backBufferProps.width - 1;
-  const rayDirectionX = entity.direction.x + entity.camera.x * camera;
-  const rayDirectionY = entity.direction.y + entity.camera.y * camera;
+function castRay(entity: Entity, level: Level, maxDepth: number = 50): CastResult | undefined {
+  const direction = entity.direction;
 
   // Calculate the distance from one cell boundary to the next boundary in the X or Y direction.
-  const deltaDistanceX = Math.abs(1 / rayDirectionX);
-  const deltaDistanceY = Math.abs(1 / rayDirectionY);
+  const deltaDistanceX = Math.abs(1 / entity.direction.x);
+  const deltaDistanceY = Math.abs(1 / entity.direction.y);
 
-  // Tracks the current Cell as the line is cast.
+  // Tracks the current Cell as the line is cast.s
   const castCell: Vector = { x: Math.floor(entity.position.x), y: Math.floor(entity.position.y) };
 
   // Tracks the total distance from the ray's origin as the line is cast.
@@ -35,7 +28,7 @@ function castRay(column: number, entity: Entity, level: Level, maxDepth: number 
   const castStep: Vector = vu.create();
 
   // Step to the next Cell on the X Axis.
-  if (rayDirectionX < 0) {
+  if (direction.x < 0) {
     castStep.x = -1;
     castDistance.x = (entity.position.x - castCell.x) * deltaDistanceX;
   } else {
@@ -44,7 +37,7 @@ function castRay(column: number, entity: Entity, level: Level, maxDepth: number 
   }
 
   // Step to the next Cell on the Y Axis.
-  if (rayDirectionY < 0) {
+  if (direction.y < 0) {
     castStep.y = -1;
     castDistance.y = (entity.position.y - castCell.y) * deltaDistanceY;
   } else {
@@ -87,15 +80,15 @@ function castRay(column: number, entity: Entity, level: Level, maxDepth: number 
       switch (side) {
         case Face.EAST:
         case Face.WEST:
-          distance = Math.abs((castCell.x - entity.position.x + (1 - castStep.x) / 2) / rayDirectionX);
-          wall = entity.position.y + ((castCell.x - entity.position.x + (1 - castStep.x) / 2) / rayDirectionX) * rayDirectionY;
+          distance = Math.abs((castCell.x - entity.position.x + (1 - castStep.x) / 2) / direction.x);
+          wall = entity.position.y + ((castCell.x - entity.position.x + (1 - castStep.x) / 2) / direction.x) * direction.y;
           wall -= Math.floor(wall);
           break;
 
         case Face.NORTH:
         case Face.SOUTH:
-          distance = Math.abs((castCell.y - entity.position.y + (1 - castStep.y) / 2) / rayDirectionY);
-          wall = entity.position.x + ((castCell.y - entity.position.y + (1 - castStep.y) / 2) / rayDirectionY) * rayDirectionX;
+          distance = Math.abs((castCell.y - entity.position.y + (1 - castStep.y) / 2) / direction.y);
+          wall = entity.position.x + ((castCell.y - entity.position.y + (1 - castStep.y) / 2) / direction.y) * direction.x;
           wall -= Math.floor(wall);
           break;
       }
@@ -112,86 +105,13 @@ function castRay(column: number, entity: Entity, level: Level, maxDepth: number 
   return undefined;
 }
 
-export class Player implements Dynamic {
-  position: Vector;
-  direction: Vector;
-  camera: Vector;
-
-  active: boolean;
-  scale: number;
-  radius: number;
-
+export class Player extends Entity {
   constructor(x: number, y: number) {
-    this.position = {
-      x,
-      y
-    };
-    
-    this.direction = {
-      x: 1.0,
-      y: 0.0
-    };
-
-    this.camera = {
-      x: 0.0,
-      y: 0.66
-    };
-
-    this.active = true;
-    this.scale = 1.0;
-    this.radius = 0.5;
-  }
-
-  getAngle(): number {
-    const radians = vu.angle(this.direction);
-    return radiansToDegrees(radians);
-  }
-
-  // Returns the Entities Field of View, in Radians
-  getFOV(): number {
-    const a: Vector = vu.normalise(vu.subtract(this.direction, this.camera));
-    const b: Vector = vu.normalise(vu.add(this.direction, this.camera));
-    const radians = vu.angle(a, b);
-    return radiansToDegrees(radians);
-  }
-
-  // eslint-disable-next-line
-  update(elapsed: number): void {}
-
-  rotate(amount: Radian): void {
-    this.direction = vu.rotate(this.direction, amount)
-    this.camera = vu.rotate(this.camera, amount)
-  }
-
-  move(amount: number, level: Level): void {
-    const position = vu.add(this.position, vu.scale(this.direction, amount))
-
-    // Check for a collision on the X Axis
-    const xCell = getCell(level, Math.floor(position.x), Math.floor(this.position.y));
-    if (xCell !== undefined && !isSolid(xCell) && !isBlocked(xCell)) {
-      this.position.x = position.x;
-    }
-    // Check for a collision on the Y Axis
-    const yCell = getCell(level, Math.floor(this.position.x), Math.floor(position.y));
-    if (yCell !== undefined && !isSolid(yCell) && !isBlocked(yCell)) {
-      this.position.y = position.y;
-    }
-
-    // Check if we walked into a hole.
-    const newCell = getCell(level, Math.floor(this.position.x), Math.floor(this.position.y));
-    if (newCell != undefined) {
-      if (newCell.type === CellType.EXIT) {
-        // FIXME: This is a temporary hack as this needs to be called outside of the animation loop.
-        setTimeout(() => {
-          const newLevel = level.exit.destination ? levels[level.exit.destination] : levels[level.depth + 1];
-          setCurrentLevel(newLevel, newLevel.entrance);
-        }, 0);
-      }
-    }
+    super(x, y);
   }
 
   interact(level: Level): void {
-    const result = castRay(backBufferProps.width / 2, this, level);
+    const result = castRay(this, level);
     if (result != undefined) {
       const cell = result.cell;
       const reach = 1 + this.radius;

@@ -1,10 +1,14 @@
 import type { Radian } from '../types';
 import type { Vector } from '../interfaces/vector';
+import type { Dynamic } from '../interfaces/dynamic';
+import type { Level } from '../interfaces/level';
 
 import * as vu from '../utils/vector-utils.js';
 import { radiansToDegrees } from '../utils/math-utils.js';
+import { isBlocked, isInteractive, isSolid } from '../utils/cell-utils.js';
+import { getCell } from '../utils/level-utils.js';
 
-export class Entity {
+export class Entity implements Dynamic{
   position: Vector;
   direction: Vector;
   camera: Vector;
@@ -44,7 +48,34 @@ export class Entity {
     this.camera = vu.rotate(this.camera, amount)
   }
 
-  move(amount: number): void {
+  move(amount: number, level: Level): void {
     const position = vu.add(this.position, vu.scale(this.direction, amount))
+
+    // Check for a collision on the X Axis
+    const xCell = getCell(level, Math.floor(position.x), Math.floor(this.position.y));
+    if (xCell !== undefined && !isSolid(xCell) && !isBlocked(xCell)) {
+      this.position.x = position.x;
+    }
+
+    // Check for a collision on the Y Axis
+    const yCell = getCell(level, Math.floor(this.position.x), Math.floor(position.y));
+    if (yCell !== undefined && !isSolid(yCell) && !isBlocked(yCell)) {
+      this.position.y = position.y;
+    }
+
+    /*
+    // FIXME: Generalise Portals
+    // Check if we walked into a hole.
+    const newCell = getCell(level, Math.floor(this.position.x), Math.floor(this.position.y));
+    if (newCell != undefined) {
+      if (newCell.type === CellType.EXIT) {
+        // FIXME: This is a temporary hack as this needs to be called outside of the animation loop.
+        setTimeout(() => {
+          const newLevel = level.exit.destination ? levels[level.exit.destination] : levels[level.depth + 1];
+          setCurrentLevel(newLevel, newLevel.entrance);
+        }, 0);
+      }
+    }
+    */
   }
 }

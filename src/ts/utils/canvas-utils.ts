@@ -1,9 +1,9 @@
-import { Point } from '../interfaces/point';
-import { Rectangle } from '../interfaces/rectangle';
-import { Texture } from '../interfaces/texture';
+import type { Vector } from '../interfaces/vector';
+import type { Rectangle } from '../interfaces/rectangle';
+import type { Texture } from '../interfaces/texture';
 
 // Draws a line of the specified colour on the target canvas.
-export function drawLine(context: CanvasRenderingContext2D, start: Point, end: Point, colour: string): void {
+export function drawLine(context: CanvasRenderingContext2D, start: Vector, end: Vector, colour: string): void {
   context.strokeStyle = colour;
   context.beginPath();
   context.moveTo(start.x, start.y);
@@ -24,7 +24,7 @@ export function drawTint(context: CanvasRenderingContext2D, destination: Rectang
 }
 
 // Draws a gradient of the specified colours on the target canvas.
-export function drawGradient(context: CanvasRenderingContext2D, start: Point, end: Point, startColour: string, endColour: string): void {
+export function drawGradient(context: CanvasRenderingContext2D, start: Vector, end: Vector, startColour: string, endColour: string): void {
   const x = context.canvas.width / 2;
   const gradient = context.createLinearGradient(x, start.y, x, end.y);
   gradient.addColorStop(0, startColour);
@@ -39,7 +39,7 @@ export function drawTexture(context: CanvasRenderingContext2D, canvas: HTMLCanva
 }
 
 // Draws the specified texture as a Skybox at the specified location on the target canvas.
-export function drawSkybox(context: CanvasRenderingContext2D, start: Point, end: Point, texturePositionX: number, texture: Texture): void {
+export function drawSkybox(context: CanvasRenderingContext2D, start: Vector, end: Vector, texturePositionX: number, texture: Texture): void {
   // FIXME: height should not be hardcoded here!
   const wallHeight = end.y - start.y;
   context.drawImage(texture.canvas as HTMLCanvasElement, texturePositionX, 0, 1, (wallHeight / context.canvas.height) * texture.height, start.x, start.y, 1, wallHeight);

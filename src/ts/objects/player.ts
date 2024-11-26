@@ -18,8 +18,8 @@ function castRay(entity: Entity, level: Level, maxDepth: number = 50): CastResul
   const deltaDistanceX = Math.abs(1 / entity.direction.x);
   const deltaDistanceY = Math.abs(1 / entity.direction.y);
 
-  // Tracks the current Cell as the line is cast.s
-  const castCell: Vector = { x: Math.floor(entity.position.x), y: Math.floor(entity.position.y) };
+  // Tracks the current Cell as the line is cast.
+  const castCell: Vector = vu.create(Math.floor(entity.position.x), Math.floor(entity.position.y));
 
   // Tracks the total distance from the ray's origin as the line is cast.
   const castDistance: Vector = vu.create();
@@ -111,7 +111,7 @@ export class Player extends Entity {
   }
 
   interact(level: Level): void {
-    const result = castRay(this, level);
+    const result = castRay(this, level, 2);
     if (result != undefined) {
       const cell = result.cell;
       const reach = 1 + this.radius;
